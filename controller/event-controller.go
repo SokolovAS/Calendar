@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"Calendar/entity"
+	"Calendar/internal/services/calendar"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -21,22 +22,9 @@ func NewEventController() EventController {
 	return &controller{}
 }
 
-type Event struct {
-	Id          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	DateTime    string `json:"dateTime"`
-	Duration    string `json:"duration"`
-	Notes       string `json:"notes"`
-}
-
-var events []Event
-
-func init() {
-	events = []Event{
-		{"1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
-	}
-}
+var (
+	EventService calendar.EventService = calendar.NewEventService()
+)
 
 func assertMarshalingError(w http.ResponseWriter, err error) {
 	if err != nil {
@@ -57,6 +45,9 @@ func assertResponseError(err error) {
 
 func (*controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	_ = r
+
+	events, _ := EventService.GetAll()
+
 	w.Header().Set("Content-Type", "application/json")
 	result, err := json.Marshal(events)
 	assertMarshalingError(w, err)
@@ -69,15 +60,12 @@ func (*controller) GetAll(w http.ResponseWriter, r *http.Request) {
 func (*controller) GetOne(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var event Event
+	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
-	var res interface{}
-
-	for _, e := range events {
-		if e.Id == event.Id {
-			res = e
-		}
+	res, err := EventService.GetOne(event.Id)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	result, err := json.Marshal(res)
@@ -90,12 +78,12 @@ func (*controller) GetOne(w http.ResponseWriter, r *http.Request) {
 func (*controller) Add(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var event Event
+	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
-	events = append(events, event)
+	e, _ := EventService.Add(event)
 
-	result, err := json.Marshal(event)
+	result, err := json.Marshal(e)
 	assertMarshalingError(w, err)
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(result)
@@ -105,61 +93,24 @@ func (*controller) Add(w http.ResponseWriter, r *http.Request) {
 func (*controller) Update(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var event Event
+	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
-	var pos int
+	e, _ := EventService.Update(event)
 
-	for i, e := range events {
-		if e.Id == event.Id {
-			pos = i
-		}
-	}
-
-	events[pos].Title = event.Title
-	events[pos].Description = event.Description
-	events[pos].Duration = event.Duration
-	events[pos].DateTime = event.DateTime
-	events[pos].Notes = event.Notes
-
-	result, err := json.Marshal(events[pos])
+	result, err := json.Marshal(e)
 	assertMarshalingError(w, err)
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(result)
 	assertResponseError(err)
 }
 
-func removeIndex(s []Event, i int) []Event {
-	return append(s[:i], s[i+1:]...)
-}
-
 func (*controller) Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var event Event
+	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
-	log.Println(event.Id)
-
-	var pos int
-	var exists = false
-
-	for i, e := range events {
-		if e.Id == event.Id {
-			fmt.Println("Found it")
-			exists = true
-			pos = i
-			break
-		} else {
-			exists = false
-			break
-		}
-	}
-
-	fmt.Println(pos, events[pos])
-
-	if exists == true {
-		events = removeIndex(events, pos)
-	}
+	EventService.Delete(event.Id)
 
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(`"result":"ok`))
