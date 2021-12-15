@@ -1,70 +1,65 @@
-package auth
+package middleware
 
 import (
-	"errors"
-	"time"
-
-	jwt "github.com/dgrijalva/jwt-go"
+	"Calendar/internal/services/calendar"
+	"context"
+	"github.com/gorilla/mux"
+	"net/http"
+	"strings"
 )
 
-// JwtWrapper wraps the signing key and the issuer
-type JwtWrapper struct {
-	SecretKey       string
-	Issuer          string
-	ExpirationHours int64
-}
+var (
+	AuthService calendar.AuthService = calendar.NewAuthService()
+)
 
-// JwtClaim adds email as a claim to the token
-type JwtClaim struct {
-	Email string
-	jwt.StandardClaims
-}
+// Authz validates token and authorizes users
+func Authz(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-// GenerateToken generates a jwt token
-func (j *JwtWrapper) GenerateToken(email string) (signedToken string, err error) {
-	claims := &JwtClaim{
-		Email: email,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.ExpirationHours)).Unix(),
-			Issuer:    j.Issuer,
-		},
-	}
+		clientToken := r.Header.Get("Authorization")
+		if clientToken == "" {
+			w.WriteHeader(http.StatusInternalServerError)
+			write, err := w.Write([]byte(`"error":"No Authorization header provided"`))
+			if err != nil {
+			}
+			_ = write
+		}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		extractedToken := strings.Split(clientToken, "Bearer ")
 
-	signedToken, err = token.SignedString([]byte(j.SecretKey))
-	if err != nil {
-		return
-	}
+		if len(extractedToken) == 2 {
+			clientToken = strings.TrimSpace(extractedToken[1])
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			write, err := w.Write([]byte(`"error":"Incorrect Format of Authorization Token`))
+			if err != nil {
+			}
+			_ = write
+			return
+		}
 
-	return
-}
+		jwtWrapper := calendar.JwtWrapper{
+			SecretKey: "verysecretkey",
+			Issuer:    "AuthService",
+		}
 
-//ValidateToken validates the jwt token
-func (j *JwtWrapper) ValidateToken(signedToken string) (claims *JwtClaim, err error) {
-	token, err := jwt.ParseWithClaims(
-		signedToken,
-		&JwtClaim{},
-		func(token *jwt.Token) (interface{}, error) {
-			return []byte(j.SecretKey), nil
-		},
-	)
+		claims, err := AuthService.ValidateToken(clientToken, &jwtWrapper)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			write, err := w.Write([]byte(`"error":"Error token validation"`))
+			if err != nil {
+			}
+			_ = write
+			return
+		}
 
-	if err != nil {
-		return
-	}
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "email", claims.Email)
 
-	claims, ok := token.Claims.(*JwtClaim)
-	if !ok {
-		err = errors.New("Couldn't parse claims")
-		return
-	}
+		r = mux.SetURLVars(r, map[string]string{
+			"email": claims.Email,
+		})
 
-	if claims.ExpiresAt < time.Now().Local().Unix() {
-		err = errors.New("JWT is expired")
-		return
-	}
-
-	return
-
+		next.ServeHTTP(w, r)
+	})
 }

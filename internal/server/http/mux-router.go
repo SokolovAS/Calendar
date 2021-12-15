@@ -1,7 +1,7 @@
 package http
 
 import (
-	middlewares "Calendar/internal/middleware/authz"
+	middlewares "Calendar/internal/middleware"
 	"fmt"
 	"github.com/gorilla/mux"
 	"log"

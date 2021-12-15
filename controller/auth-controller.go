@@ -3,7 +3,6 @@ package controller
 import (
 	"Calendar/entity"
 	database "Calendar/initdb.d"
-	auth "Calendar/internal/middleware"
 	"Calendar/internal/services/calendar"
 	"encoding/json"
 	"gorm.io/gorm"
@@ -13,6 +12,7 @@ import (
 
 var (
 	UserService calendar.UserService = calendar.NewUserService()
+	AuthService calendar.AuthService = calendar.NewAuthService()
 )
 
 type authController struct{}
@@ -88,13 +88,13 @@ func (*authController) Login(w http.ResponseWriter, r *http.Request) {
 		assertGormError(w, `"error":"Error password"`)
 	}
 
-	jwtWrapper := auth.JwtWrapper{
+	jwtWrapper := calendar.JwtWrapper{
 		SecretKey:       "verysecretkey",
 		Issuer:          "AuthService",
 		ExpirationHours: 24,
 	}
 
-	signedToken, err := jwtWrapper.GenerateToken(user.Email)
+	signedToken, err := AuthService.GenerateToken(user.Email, &jwtWrapper)
 	if err != nil {
 		assertGormError(w, `"msg": "error signing token"`)
 	}
