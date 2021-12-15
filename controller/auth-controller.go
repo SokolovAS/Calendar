@@ -5,7 +5,6 @@ import (
 	database "Calendar/initdb.d"
 	auth "Calendar/internal/middleware"
 	"Calendar/internal/services/calendar"
-	"Calendar/models"
 	"encoding/json"
 	"gorm.io/gorm"
 	"log"
@@ -69,7 +68,7 @@ type LoginResponse struct {
 // Login logs users in
 func (*authController) Login(w http.ResponseWriter, r *http.Request) {
 	var payload LoginPayload
-	var user models.User
+	var user entity.User
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
@@ -83,7 +82,7 @@ func (*authController) Login(w http.ResponseWriter, r *http.Request) {
 		assertGormError(w, `"error":"Error fetching data"`)
 	}
 
-	err = user.CheckPassword(payload.Password)
+	err = UserService.CheckPassword(payload.Password, user.Password)
 	if err != nil {
 		log.Println(err)
 		assertGormError(w, `"error":"Error password"`)

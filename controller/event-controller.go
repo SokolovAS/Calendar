@@ -4,7 +4,6 @@ import (
 	"Calendar/entity"
 	database "Calendar/initdb.d"
 	"Calendar/internal/services/calendar"
-	"Calendar/models"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -59,7 +58,7 @@ func assertResponseError(err error) {
 func (*controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	_ = r
 
-	var user models.User
+	var user entity.User
 	params := mux.Vars(r)
 	email := params["email"]
 
@@ -83,7 +82,7 @@ func (*controller) GetAll(w http.ResponseWriter, r *http.Request) {
 func (*controller) GetOne(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var user models.User
+	var user entity.User
 
 	email := r.Context().Value("email")
 
