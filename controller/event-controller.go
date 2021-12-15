@@ -2,9 +2,13 @@ package controller
 
 import (
 	"Calendar/entity"
+	database "Calendar/initdb.d"
 	"Calendar/internal/services/calendar"
+	"Calendar/models"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -37,6 +41,15 @@ func assertMarshalingError(w http.ResponseWriter, err error) {
 	}
 }
 
+func assertGormError(w http.ResponseWriter, error string) {
+	w.WriteHeader(http.StatusInternalServerError)
+	write, err := w.Write([]byte(error))
+	if err != nil {
+		return
+	}
+	_ = write
+}
+
 func assertResponseError(err error) {
 	if err != nil {
 		return
@@ -45,6 +58,16 @@ func assertResponseError(err error) {
 
 func (*controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	_ = r
+
+	var user models.User
+	params := mux.Vars(r)
+	email := params["email"]
+
+	data := database.GlobalDB.Where("email = ?", email).First(&user)
+
+	if data.Error == gorm.ErrRecordNotFound {
+		assertGormError(w, `"error":"user not found"`)
+	}
 
 	events, _ := EventService.GetAll()
 
@@ -59,6 +82,16 @@ func (*controller) GetAll(w http.ResponseWriter, r *http.Request) {
 
 func (*controller) GetOne(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	var user models.User
+
+	email := r.Context().Value("email")
+
+	data := database.GlobalDB.Where("email = ?", email.(string)).First(&user)
+
+	if data.Error == gorm.ErrRecordNotFound {
+		assertGormError(w, `"error":"user not found"`)
+	}
 
 	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
