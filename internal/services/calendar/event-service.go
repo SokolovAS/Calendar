@@ -22,17 +22,17 @@ type EventService interface {
 	Delete(id string)
 }
 
-type service struct{}
+type eventService struct{}
 
 func NewEventService() EventService {
-	return &service{}
+	return &eventService{}
 }
 
-func (*service) GetAll() ([]entity.Event, error) {
+func (*eventService) GetAll() ([]entity.Event, error) {
 	return events, nil
 }
 
-func (*service) GetOne(id string) (entity.Event, error) {
+func (*eventService) GetOne(id string) (entity.Event, error) {
 	var res entity.Event
 	var exist bool
 
@@ -50,12 +50,12 @@ func (*service) GetOne(id string) (entity.Event, error) {
 	return res, errors.New("not able to find the event")
 }
 
-func (*service) Add(event entity.Event) (entity.Event, error) {
+func (*eventService) Add(event entity.Event) (entity.Event, error) {
 	events = append(events, event)
 	return event, nil
 }
 
-func (*service) Update(event entity.Event) (entity.Event, error) {
+func (*eventService) Update(event entity.Event) (entity.Event, error) {
 	var pos int
 
 	for i, e := range events {
@@ -73,7 +73,7 @@ func (*service) Update(event entity.Event) (entity.Event, error) {
 	return events[pos], nil
 }
 
-func (*service) Delete(id string) {
+func (*eventService) Delete(id string) {
 	var pos int
 	var exists = false
 

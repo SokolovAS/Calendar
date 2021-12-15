@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	eventController  controller.EventController  = controller.NewEventController()
-	publicController controller.PublicController = controller.NewPublicController()
-	httpRouter       router.Router               = router.NewMuxRouter()
+	eventController controller.EventController = controller.NewEventController()
+	authController  controller.AuthController  = controller.NewAuthController()
+	httpRouter      router.Router              = router.NewMuxRouter()
 )
 
 func main() {
@@ -42,8 +42,8 @@ func main() {
 	httpRouter.PUT("/event", eventController.Update)
 	httpRouter.DELETE("/event", eventController.Delete)
 
-	httpRouter.POST("/signup", publicController.Signup)
-	httpRouter.POST("/login", publicController.Login)
+	httpRouter.POST("/signup", authController.Signup)
+	httpRouter.POST("/login", authController.Login)
 
 	httpRouter.SERVE(port)
 }

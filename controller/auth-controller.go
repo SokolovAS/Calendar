@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"Calendar/entity"
 	database "Calendar/initdb.d"
 	auth "Calendar/internal/middleware"
+	"Calendar/internal/services/calendar"
 	"Calendar/models"
 	"encoding/json"
 	"gorm.io/gorm"
@@ -10,34 +12,37 @@ import (
 	"net/http"
 )
 
-type publicController struct{}
+var (
+	UserService calendar.UserService = calendar.NewUserService()
+)
 
-type PublicController interface {
+type authController struct{}
+
+type AuthController interface {
 	Signup(w http.ResponseWriter, r *http.Request)
 	Login(w http.ResponseWriter, r *http.Request)
 }
 
-func NewPublicController() PublicController {
-	return &publicController{}
+func NewAuthController() AuthController {
+	return &authController{}
 }
 
 // Signup creates a user in db
-func (*publicController) Signup(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-
+func (*authController) Signup(w http.ResponseWriter, r *http.Request) {
+	user := entity.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		log.Println(err)
 		assertMarshalingError(w, err)
 	}
 
-	err = user.HashPassword(user.Password)
+	err = UserService.HashPassword(&user)
 	if err != nil {
 		log.Println(err.Error())
 		assertMarshalingError(w, err)
 	}
 
-	err = user.CreateUserRecord()
+	err = UserService.CreateUserRecord(user)
 	if err != nil {
 		log.Println(err)
 		assertMarshalingError(w, err)
@@ -62,7 +67,7 @@ type LoginResponse struct {
 }
 
 // Login logs users in
-func (*publicController) Login(w http.ResponseWriter, r *http.Request) {
+func (*authController) Login(w http.ResponseWriter, r *http.Request) {
 	var payload LoginPayload
 	var user models.User
 
