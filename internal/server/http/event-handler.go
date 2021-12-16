@@ -2,7 +2,6 @@ package http
 
 import (
 	"Calendar/entity"
-	database "Calendar/initdb.d"
 	"Calendar/internal/services/calendar"
 	"encoding/json"
 	"fmt"
@@ -13,6 +12,7 @@ import (
 
 type eventHandler struct {
 	eServ calendar.EventService
+	uServ calendar.UserService
 }
 
 type EventHandler interface {
@@ -26,6 +26,7 @@ type EventHandler interface {
 func NewEventHandler() EventHandler {
 	return &eventHandler{
 		eServ: calendar.NewEventService(),
+		uServ: calendar.NewUserService(),
 	}
 }
 
@@ -56,17 +57,17 @@ func assertResponseError(err error) {
 }
 
 func (eventH *eventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	_ = r
-
-	var user entity.User
+	//---------------------------------------------------------Should be removed
+	//var user entity.User
 	params := mux.Vars(r)
 	email := params["email"]
 
-	data := database.GlobalDB.Where("email = ?", email).First(&user)
+	_, err := eventH.uServ.GetEmail(email)
 
-	if data.Error == gorm.ErrRecordNotFound {
+	if err == gorm.ErrRecordNotFound {
 		assertGormError(w, `"error":"user not found"`)
 	}
+	//----------------------------------------------------------Should be removed
 
 	events, _ := eventH.eServ.GetAll()
 

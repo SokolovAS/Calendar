@@ -1,19 +1,15 @@
 package main
 
 import (
+	"Calendar/database"
 	"Calendar/entity"
-	database "Calendar/initdb.d"
 	"Calendar/internal/server/http"
 	"log"
 )
 
 func main() {
-	err := database.InitDatabase()
-	if err != nil {
-		log.Fatalln("could not create database", err)
-	}
-
-	err = database.GlobalDB.AutoMigrate(&entity.User{})
+	conn := database.NewGormDB()
+	err := conn.AutoMigrate(&entity.User{})
 	if err != nil {
 		log.Fatalln("could not migrate user model", err)
 	}

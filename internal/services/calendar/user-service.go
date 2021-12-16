@@ -2,26 +2,33 @@ package calendar
 
 import (
 	"Calendar/entity"
-	database "Calendar/initdb.d"
+	"Calendar/internal/repository"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type UserService interface {
 	CreateUserRecord(m entity.User) error
 	HashPassword(m *entity.User) error
 	CheckPassword(providedPassword string, userPassword string) error
+	GetEmail(email string) (entity.User, error)
 }
 
-type userService struct{}
+type userService struct {
+	repo repository.SqliteRepo
+}
 
 func NewUserService() UserService {
-	return &userService{}
+	return &userService{
+		repo: repository.NewSqliteRepo(),
+	}
 }
 
 func (s *userService) CreateUserRecord(m entity.User) error {
-	result := database.GlobalDB.Create(&m)
+	result := s.repo.Create(&m)
 	if result.Error != nil {
-		return result.Error
+		return errors.New("cannot create a user")
 	}
 
 	return nil
@@ -45,4 +52,12 @@ func (s *userService) CheckPassword(providedPassword string, userPassword string
 	}
 
 	return nil
+}
+
+func (s *userService) GetEmail(email string) (entity.User, error) {
+	user, err := s.repo.GetEmail(email)
+	if err == gorm.ErrRecordNotFound {
+		return user, errors.New(`"error":"Error fetching data"`)
+	}
+	return user, nil
 }

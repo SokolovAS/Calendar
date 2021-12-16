@@ -1,9 +1,11 @@
 package calendar
 
 import (
+	"Calendar/database"
 	"Calendar/entity"
 	"errors"
 	"fmt"
+	"gorm.io/gorm"
 )
 
 var events []entity.Event
@@ -22,10 +24,14 @@ type EventService interface {
 	Delete(id string)
 }
 
-type eventService struct{}
+type eventService struct {
+	conn *gorm.DB
+}
 
 func NewEventService() EventService {
-	return &eventService{}
+	return &eventService{
+		conn: database.NewGormDB(),
+	}
 }
 
 func (*eventService) GetAll() ([]entity.Event, error) {

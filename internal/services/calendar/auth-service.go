@@ -3,7 +3,6 @@ package calendar
 import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
 	"time"
@@ -14,7 +13,7 @@ type authService struct{}
 type AuthService interface {
 	GenerateToken(email string, j *JwtWrapper) (signedToken string, err error)
 	ValidateToken(signedToken string, j *JwtWrapper) (claims *JwtClaim, err error)
-	Validate(r *http.Request) (*http.Request, error)
+	Validate(r *http.Request) (string, error)
 }
 
 func NewAuthService() AuthService {
@@ -81,10 +80,10 @@ func (*authService) ValidateToken(signedToken string, j *JwtWrapper) (claims *Jw
 	return
 }
 
-func (aS *authService) Validate(r *http.Request) (*http.Request, error) {
+func (aS *authService) Validate(r *http.Request) (string, error) {
 	clientToken := r.Header.Get("Authorization")
 	if clientToken == "" {
-		return r, errors.New(`"error":"No Authorization header provided"`)
+		return "", errors.New(`"error":"No Authorization header provided"`)
 	}
 
 	extractedToken := strings.Split(clientToken, "Bearer ")
@@ -92,7 +91,7 @@ func (aS *authService) Validate(r *http.Request) (*http.Request, error) {
 	if len(extractedToken) == 2 {
 		clientToken = strings.TrimSpace(extractedToken[1])
 	} else {
-		return r, errors.New(`"error":"Incorrect Format of Authorization Token`)
+		return "", errors.New(`"error":"Incorrect Format of Authorization Token`)
 	}
 
 	jwtWrapper := JwtWrapper{
@@ -102,10 +101,8 @@ func (aS *authService) Validate(r *http.Request) (*http.Request, error) {
 
 	claims, err := aS.ValidateToken(clientToken, &jwtWrapper)
 	if err != nil {
-		return r, errors.New(`"error":"Error token validation"`)
+		return "", errors.New(`"error":"Error token validation"`)
 	}
-	r = mux.SetURLVars(r, map[string]string{
-		"email": claims.Email,
-	})
-	return r, err
+
+	return claims.Email, err
 }

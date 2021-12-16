@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"Calendar/internal/services/calendar"
+	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -22,7 +23,7 @@ func NewMiddleware() Middleware {
 // Authz validates token and authorizes users
 func (m *middleware) Authz(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r, err := m.authS.Validate(r)
+		email, err := m.authS.Validate(r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, err := w.Write([]byte(`"error":"Incorrect Format of Authorization Token or so`))
@@ -30,6 +31,9 @@ func (m *middleware) Authz(next http.Handler) http.Handler {
 			}
 			return
 		}
+		r = mux.SetURLVars(r, map[string]string{
+			"email": email,
+		})
 		next.ServeHTTP(w, r)
 	})
 }

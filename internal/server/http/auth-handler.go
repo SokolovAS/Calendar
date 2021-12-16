@@ -2,10 +2,8 @@ package http
 
 import (
 	"Calendar/entity"
-	database "Calendar/initdb.d"
 	"Calendar/internal/services/calendar"
 	"encoding/json"
-	"gorm.io/gorm"
 	"log"
 	"net/http"
 )
@@ -69,7 +67,6 @@ type LoginResponse struct {
 // Login logs users in
 func (aH *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var payload LoginPayload
-	var user entity.User
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
@@ -77,9 +74,9 @@ func (aH *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 		assertMarshalingError(w, err)
 	}
 
-	result := database.GlobalDB.Where("email = ?", payload.Email).First(&user) //todo move to service
+	user, err := aH.userS.GetEmail(payload.Email)
 
-	if result.Error == gorm.ErrRecordNotFound {
+	if err != nil {
 		assertGormError(w, `"error":"Error fetching data"`)
 	}
 
