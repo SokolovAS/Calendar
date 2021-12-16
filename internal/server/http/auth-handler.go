@@ -1,4 +1,4 @@
-package controller
+package http
 
 import (
 	"Calendar/entity"
@@ -10,24 +10,25 @@ import (
 	"net/http"
 )
 
-var (
-	UserService calendar.UserService = calendar.NewUserService()
-	AuthService calendar.AuthService = calendar.NewAuthService()
-)
+type authHandler struct {
+	authS calendar.AuthService
+	userS calendar.UserService
+}
 
-type authController struct{}
-
-type AuthController interface {
+type AuthHandler interface {
 	Signup(w http.ResponseWriter, r *http.Request)
 	Login(w http.ResponseWriter, r *http.Request)
 }
 
-func NewAuthController() AuthController {
-	return &authController{}
+func NewAuthHandler() AuthHandler {
+	return &authHandler{
+		authS: calendar.NewAuthService(),
+		userS: calendar.NewUserService(),
+	}
 }
 
 // Signup creates a user in db
-func (*authController) Signup(w http.ResponseWriter, r *http.Request) {
+func (aH *authHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	user := entity.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -35,13 +36,13 @@ func (*authController) Signup(w http.ResponseWriter, r *http.Request) {
 		assertMarshalingError(w, err)
 	}
 
-	err = UserService.HashPassword(&user)
+	err = aH.userS.HashPassword(&user)
 	if err != nil {
 		log.Println(err.Error())
 		assertMarshalingError(w, err)
 	}
 
-	err = UserService.CreateUserRecord(user)
+	err = aH.userS.CreateUserRecord(user)
 	if err != nil {
 		log.Println(err)
 		assertMarshalingError(w, err)
@@ -66,7 +67,7 @@ type LoginResponse struct {
 }
 
 // Login logs users in
-func (*authController) Login(w http.ResponseWriter, r *http.Request) {
+func (aH *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var payload LoginPayload
 	var user entity.User
 
@@ -76,13 +77,13 @@ func (*authController) Login(w http.ResponseWriter, r *http.Request) {
 		assertMarshalingError(w, err)
 	}
 
-	result := database.GlobalDB.Where("email = ?", payload.Email).First(&user)
+	result := database.GlobalDB.Where("email = ?", payload.Email).First(&user) //todo move to service
 
 	if result.Error == gorm.ErrRecordNotFound {
 		assertGormError(w, `"error":"Error fetching data"`)
 	}
 
-	err = UserService.CheckPassword(payload.Password, user.Password)
+	err = aH.userS.CheckPassword(payload.Password, user.Password)
 	if err != nil {
 		log.Println(err)
 		assertGormError(w, `"error":"Error password"`)
@@ -94,7 +95,7 @@ func (*authController) Login(w http.ResponseWriter, r *http.Request) {
 		ExpirationHours: 24,
 	}
 
-	signedToken, err := AuthService.GenerateToken(user.Email, &jwtWrapper)
+	signedToken, err := aH.authS.GenerateToken(user.Email, &jwtWrapper)
 	if err != nil {
 		assertGormError(w, `"msg": "error signing token"`)
 	}

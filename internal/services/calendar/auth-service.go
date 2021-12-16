@@ -3,6 +3,9 @@ package calendar
 import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
+	"net/http"
+	"strings"
 	"time"
 )
 
@@ -11,6 +14,7 @@ type authService struct{}
 type AuthService interface {
 	GenerateToken(email string, j *JwtWrapper) (signedToken string, err error)
 	ValidateToken(signedToken string, j *JwtWrapper) (claims *JwtClaim, err error)
+	Validate(r *http.Request) (*http.Request, error)
 }
 
 func NewAuthService() AuthService {
@@ -74,7 +78,34 @@ func (*authService) ValidateToken(signedToken string, j *JwtWrapper) (claims *Jw
 		err = errors.New("JWT is expired")
 		return
 	}
-
 	return
+}
 
+func (aS *authService) Validate(r *http.Request) (*http.Request, error) {
+	clientToken := r.Header.Get("Authorization")
+	if clientToken == "" {
+		return r, errors.New(`"error":"No Authorization header provided"`)
+	}
+
+	extractedToken := strings.Split(clientToken, "Bearer ")
+
+	if len(extractedToken) == 2 {
+		clientToken = strings.TrimSpace(extractedToken[1])
+	} else {
+		return r, errors.New(`"error":"Incorrect Format of Authorization Token`)
+	}
+
+	jwtWrapper := JwtWrapper{
+		SecretKey: "verysecretkey",
+		Issuer:    "AuthService",
+	}
+
+	claims, err := aS.ValidateToken(clientToken, &jwtWrapper)
+	if err != nil {
+		return r, errors.New(`"error":"Error token validation"`)
+	}
+	r = mux.SetURLVars(r, map[string]string{
+		"email": claims.Email,
+	})
+	return r, err
 }

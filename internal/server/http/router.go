@@ -1,7 +1,6 @@
 package http
 
 import (
-	"Calendar/controller"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,27 +16,36 @@ type Router interface {
 	SERVE(port string)
 }
 
-var (
-	eventController controller.EventController = controller.NewEventController()
-	authController  controller.AuthController  = controller.NewAuthController()
-	httpRouter      Router                     = NewMuxRouter()
-)
+type router struct {
+	mux   Router
+	auth  AuthHandler
+	event EventHandler
+}
 
-func Init() {
-	httpRouter.GET("/", func(w http.ResponseWriter, r *http.Request) {
+func (r *router) Init() {
+	r.mux.GET("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintln(w, "Up and running...")
 		if err != nil {
 			log.Fatalln("Error!")
 		}
 	})
-	httpRouter.GET("/events", eventController.GetAll)
-	httpRouter.GET("/event", eventController.GetOne)
-	httpRouter.POST("/event", eventController.Add)
-	httpRouter.PUT("/event", eventController.Update)
-	httpRouter.DELETE("/event", eventController.Delete)
+	r.mux.GET("/events", r.event.GetAll)
+	r.mux.GET("/event", r.event.GetOne)
+	r.mux.POST("/event", r.event.Add)
+	r.mux.PUT("/event", r.event.Update)
+	r.mux.DELETE("/event", r.event.Delete)
 
-	httpRouter.POST("/signup", authController.Signup)
-	httpRouter.POST("/login", authController.Login)
+	r.mux.POST("/signup", r.auth.Signup)
+	r.mux.POST("/login", r.auth.Login)
 
-	httpRouter.SERVE(port)
+	r.mux.SERVE(port)
+}
+
+func BuildRouts() {
+	r := router{
+		mux:   NewMuxRouter(),
+		auth:  NewAuthHandler(),
+		event: NewEventHandler(),
+	}
+	r.Init()
 }

@@ -9,35 +9,37 @@ import (
 	_ "net/http"
 )
 
-var (
-	muxDispatcher = mux.NewRouter()
-)
-
-type muxRouter struct{}
+type muxRouter struct {
+	dispatcher *mux.Router
+	mid        middlewares.Middleware
+}
 
 func NewMuxRouter() Router {
-	return &muxRouter{}
+	return &muxRouter{
+		dispatcher: mux.NewRouter(),
+		mid:        middlewares.NewMiddleware(),
+	}
 }
 
 func (m *muxRouter) GET(uri string, f func(w http.ResponseWriter, r *http.Request)) {
-	muxDispatcher.HandleFunc(uri, f).Methods("GET")
-	muxDispatcher.Use(middlewares.Authz)
+	m.dispatcher.HandleFunc(uri, f).Methods(http.MethodGet)
+	m.dispatcher.Use(m.mid.Authz)
 }
 func (m *muxRouter) POST(uri string, f func(w http.ResponseWriter, r *http.Request)) {
-	muxDispatcher.HandleFunc(uri, f).Methods("POST")
-	muxDispatcher.Use(middlewares.Authz)
+	m.dispatcher.HandleFunc(uri, f).Methods(http.MethodPost)
+	m.dispatcher.Use(m.mid.Authz)
 }
 func (m *muxRouter) PUT(uri string, f func(w http.ResponseWriter, r *http.Request)) {
-	muxDispatcher.HandleFunc(uri, f).Methods("PUT")
-	muxDispatcher.Use(middlewares.Authz)
+	m.dispatcher.HandleFunc(uri, f).Methods(http.MethodPut)
+	m.dispatcher.Use(m.mid.Authz)
 }
 func (m *muxRouter) DELETE(uri string, f func(w http.ResponseWriter, r *http.Request)) {
-	muxDispatcher.HandleFunc(uri, f).Methods("DELETE")
-	muxDispatcher.Use(middlewares.Authz)
+	m.dispatcher.HandleFunc(uri, f).Methods(http.MethodDelete)
+	m.dispatcher.Use(m.mid.Authz)
 }
 func (m *muxRouter) SERVE(port string) {
 	fmt.Printf("Mux http server is running on port %v", port)
-	err := http.ListenAndServe(port, muxDispatcher)
+	err := http.ListenAndServe(port, m.dispatcher)
 	if err != nil {
 		log.Fatal(err)
 	}
