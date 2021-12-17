@@ -8,8 +8,11 @@ import (
 )
 
 func main() {
-	conn := database.NewGormDB()
-	err := conn.AutoMigrate(&entity.User{})
+	connection, err := database.NewGormDB()
+	if err != nil {
+		log.Fatal("Error db connection")
+	}
+	err = connection.AutoMigrate(&entity.User{})
 	if err != nil {
 		log.Fatalln("could not migrate user model", err)
 	}

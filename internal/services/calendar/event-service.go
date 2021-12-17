@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"log"
 )
 
 var events []entity.Event
@@ -29,8 +30,12 @@ type eventService struct {
 }
 
 func NewEventService() EventService {
+	connection, err := database.NewGormDB()
+	if err != nil {
+		log.Fatal("Error db connection")
+	}
 	return &eventService{
-		conn: database.NewGormDB(),
+		conn: connection,
 	}
 }
 

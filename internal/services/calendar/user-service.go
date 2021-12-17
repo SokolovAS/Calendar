@@ -26,11 +26,7 @@ func NewUserService() UserService {
 }
 
 func (s *userService) CreateUserRecord(m entity.User) error {
-	result := s.repo.Create(&m)
-	if result.Error != nil {
-		return errors.New("cannot create a user")
-	}
-
+	s.repo.Create(&m)
 	return nil
 }
 

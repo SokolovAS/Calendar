@@ -4,6 +4,9 @@ import (
 	"testing"
 )
 
-func TestInitDB(t *testing.T) {
-	//todo
+func TestNewGormDB(t *testing.T) {
+	_, err := NewGormDB()
+	if err != nil {
+		t.Errorf("got err: %s", err)
+	}
 }

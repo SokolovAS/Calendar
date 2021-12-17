@@ -5,7 +5,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewGormDB() *gorm.DB {
-	connection, _ := gorm.Open(sqlite.Open("auth.db"), &gorm.Config{})
-	return connection
+func NewGormDB() (*gorm.DB, error) {
+	connection, err := gorm.Open(sqlite.Open("auth.db"), &gorm.Config{})
+	if err != nil {
+		return connection, err
+	}
+
+	return connection, err
 }
