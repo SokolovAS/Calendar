@@ -6,6 +6,8 @@ package repository
 
 import (
 	entity "Calendar/entity"
+	"fmt"
+	"github.com/stretchr/testify/require"
 	reflect "reflect"
 	"testing"
 
@@ -164,22 +166,66 @@ func (mr *MockgormScannerMockRecorder) First(dest interface{}, conds ...interfac
 const testEmail = "test@email.com"
 
 func TestGetEmail(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+	testCases := []struct {
+		name    string
+		mock    func(ctrl *gomock.Controller) gormConnection
+		wantErr bool
+	}{
+		{
+			name:    "success",
+			wantErr: false,
+			mock: func(ctrl *gomock.Controller) gormConnection {
+				mC := NewMockgormConnection(ctrl)
+				mS := NewMockgormScanner(ctrl)
 
-	entUser := entity.User{}
+				mC.EXPECT().Where(gomock.Any(), gomock.Any()).Return(mS)
+				mS.EXPECT().First(gomock.Any()).Return(&gorm.DB{})
+				return mC
+			},
+		},
+		{
+			name:    "bad path",
+			wantErr: true,
+			mock: func(ctrl *gomock.Controller) gormConnection {
+				mC := NewMockgormConnection(ctrl)
+				mS := NewMockgormScanner(ctrl)
 
-	mC := NewMockgormConnection(mockCtrl)
-
-	mS := NewMockgormScanner(mockCtrl)
-	mS.First(gomock.Any()).Scan(&entUser)
-
-	mC.
-		EXPECT().
-		Where(gomock.Any(), gomock.Any()).Return(mS)
-
-	repo := sqliteRepo{
-		gormConnection: mC,
+				mC.EXPECT().Where(gomock.Any(), gomock.Any()).Return(mS)
+				mS.EXPECT().First(gomock.Any()).Return(&gorm.DB{
+					Error: fmt.Errorf("err"),
+				})
+				return mC
+			},
+		},
 	}
-	repo.GetEmail(testEmail)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctl := gomock.NewController(t)
+			defer ctl.Finish()
+
+			mock := tc.mock(ctl)
+			repo := sqliteRepo{gormConnection: mock}
+
+			_, err := repo.GetEmail(testEmail)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestCreate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mC := NewMockgormConnection(ctrl)
+	mC.EXPECT().Create(gomock.Any()).Return(&gorm.DB{})
+
+	repo := sqliteRepo{gormConnection: mC}
+	u := entity.User{}
+	repo.Create(&u)
 }

@@ -24,7 +24,7 @@ func (s *sqliteRepo) Create(user *entity.User) {
 func (s *sqliteRepo) GetEmail(email string) (entity.User, error) {
 	var user entity.User
 	result := s.gormConnection.Where("email = ?", email).First(&user)
-	if result.Error == gorm.ErrRecordNotFound {
+	if result.Error != nil {
 		return user, errors.New(`"error":"Error fetching data"`)
 	}
 	return user, nil
