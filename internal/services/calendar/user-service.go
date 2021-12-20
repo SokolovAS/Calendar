@@ -46,7 +46,6 @@ func (s *userService) CheckPassword(providedPassword string, userPassword string
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

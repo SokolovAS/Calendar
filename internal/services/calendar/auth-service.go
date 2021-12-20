@@ -3,17 +3,18 @@ package calendar
 import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
-	"net/http"
 	"strings"
 	"time"
 )
 
-type authService struct{}
+type authService struct {
+	Claim JwtClaim
+}
 
 type AuthService interface {
 	GenerateToken(email string, j *JwtWrapper) (signedToken string, err error)
 	ValidateToken(signedToken string, j *JwtWrapper) (claims *JwtClaim, err error)
-	Validate(r *http.Request) (string, error)
+	Validate(clientToken string) (string, error)
 }
 
 func NewAuthService() AuthService {
@@ -80,8 +81,7 @@ func (*authService) ValidateToken(signedToken string, j *JwtWrapper) (claims *Jw
 	return
 }
 
-func (aS *authService) Validate(r *http.Request) (string, error) {
-	clientToken := r.Header.Get("Authorization")
+func (aS *authService) Validate(clientToken string) (string, error) {
 	if clientToken == "" {
 		return "", errors.New(`"error":"No Authorization header provided"`)
 	}

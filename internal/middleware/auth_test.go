@@ -19,7 +19,8 @@ func (m *authServiceMock) ValidateToken(signedToken string, j *calendar.JwtWrapp
 	return
 }
 
-func (*authServiceMock) Validate(r *http.Request) (string, error) {
+func (*authServiceMock) Validate(clientToken string) (string, error) {
+	_ = clientToken
 	return testEmail, nil
 }
 

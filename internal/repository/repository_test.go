@@ -1,35 +1,40 @@
 package repository
 
 import (
-	"Calendar/database"
 	"Calendar/entity"
 	"gorm.io/gorm"
-	"log"
 	"testing"
 )
 
 var emailTest = "test@gmail.com"
 
-type sqliteRepoMock struct {
-	conn gormConnection
-}
-
-func (*sqliteRepoMock) Create(*entity.User) {
-	return
-}
-
-func (*sqliteRepoMock) GetEmail(email string) (entity.User, error) {
-	user := entity.User{Email: email}
-	return user, nil
-}
+//type sqliteRepoMock struct {
+//	conn gormConnection
+//}
+//
+//func (*sqliteRepoMock) Create(*entity.User) {
+//	return
+//}
+//
+//func (*sqliteRepoMock) GetEmail(email string) (entity.User, error) {
+//	user := entity.User{Email: email}
+//	return user, nil
+//}
 
 type gCMock struct {
-	conn *gorm.DB
+}
+
+type gSMock struct {
+}
+
+func (*gSMock) First(dest interface{}, conds ...interface{}) (tx *gorm.DB) {
+
+	return &gorm.DB{}
 }
 
 func (g *gCMock) Where(query interface{}, args ...interface{}) (tx gormScanner) {
 
-	return &gS{}
+	return &gSMock{}
 }
 
 func (g *gCMock) Create(value interface{}) (tx *gorm.DB) {
@@ -38,15 +43,15 @@ func (g *gCMock) Create(value interface{}) (tx *gorm.DB) {
 }
 
 func NewSqliteRepoMock() SqliteRepo {
-	connection, err := database.NewGormDB()
-	if err != nil {
-		log.Fatal("error db connection")
-	}
+	//connection, err := database.NewGormDB()
+	//if err != nil {
+	//	log.Fatal("error db connection")
+	//}
 
-	gc := &gCMock{conn: connection}
+	gc := &gCMock{}
 
-	return &sqliteRepoMock{
-		conn: gc,
+	return &sqliteRepo{
+		gormConnection: gc,
 	}
 }
 

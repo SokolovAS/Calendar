@@ -23,7 +23,8 @@ func NewMiddleware() Middleware {
 // Authz validates token and authorizes users
 func (m *middleware) Authz(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		email, err := m.authS.Validate(r)
+		clientToken := r.Header.Get("Authorization")
+		email, err := m.authS.Validate(clientToken)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, err := w.Write([]byte(`"error":"Incorrect Format of Authorization Token or so`))
