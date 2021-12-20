@@ -5,8 +5,6 @@ import (
 	"Calendar/internal/services/calendar"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -59,14 +57,14 @@ func assertResponseError(err error) {
 func (eventH *eventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	//---------------------------------------------------------Should be removed
 	//var user entity.User
-	params := mux.Vars(r)
-	email := params["email"]
-
-	_, err := eventH.uServ.GetEmail(email)
-
-	if err == gorm.ErrRecordNotFound {
-		assertGormError(w, `"error":"user not found"`)
-	}
+	//params := mux.Vars(r)
+	//email := params["email"]
+	//
+	//_, err := eventH.uServ.GetEmail(email)
+	//
+	//if err == gorm.ErrRecordNotFound {
+	//	assertGormError(w, `"error":"user not found"`)
+	//}
 	//----------------------------------------------------------Should be removed
 
 	events, _ := eventH.eServ.GetAll()
