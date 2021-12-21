@@ -2,7 +2,9 @@ package http
 
 import (
 	"Calendar/entity"
+	"Calendar/internal/services/calendar"
 	"bytes"
+	"errors"
 	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
@@ -10,33 +12,73 @@ import (
 )
 
 func TestGetAll(t *testing.T) {
-	events := []entity.Event{
-		{"1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
+
+	testCases := []struct {
+		name    string
+		mock    func(ctrl *gomock.Controller) calendar.EventService
+		wantErr bool
+	}{
+		{
+			name:    "success",
+			wantErr: false,
+			mock: func(ctrl *gomock.Controller) calendar.EventService {
+				events := []entity.Event{
+					{"1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
+				}
+				eS := NewMockEventService(ctrl)
+
+				eS.EXPECT().GetAll().Return(events, nil)
+				return eS
+			},
+		},
+		{
+			name:    "bad path",
+			wantErr: true,
+			mock: func(ctrl *gomock.Controller) calendar.EventService {
+
+				eS := NewMockEventService(ctrl)
+
+				eS.EXPECT().GetAll().Return([]entity.Event{}, errors.New("error getting events"))
+				return eS
+			},
+		},
 	}
-	//eJson, _ := json.Marshal(events)
 
-	ctrl := gomock.NewController(t)
-	eS := NewMockEventService(ctrl)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctl := gomock.NewController(t)
+			defer ctl.Finish()
 
-	eS.EXPECT().GetAll().Return(events, nil)
+			eS := tc.mock(ctl)
+			eH := eventHandler{
+				eServ: eS,
+			}
 
-	eH := eventHandler{
-		eServ: eS,
+			req, _ := http.NewRequest("GET", "http://localhost:8000/events", nil)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6InBvc3RtYW5AZ21haWwuY29tIiwiZXhwIjoxNjM5NzY2MzY2LCJpc3MiOiJBdXRoU2VydmljZSJ9.wA0eqkUacIN0dxByR3A9JsXZsTVDbTmGndMqKx8_3Sc")
+
+			rr := httptest.NewRecorder()
+
+			handler := http.HandlerFunc(eH.GetAll)
+
+			handler.ServeHTTP(rr, req)
+
+			if tc.wantErr {
+				if status := rr.Code; status != http.StatusInternalServerError {
+					t.Errorf("expected an error: got %v want %v",
+						status, http.StatusInternalServerError)
+				}
+				return
+			}
+			if status := rr.Code; status != http.StatusOK {
+				t.Errorf("handler returned wrong status code: got %v want %v",
+					status, http.StatusOK)
+			}
+
+		})
 	}
 
-	req, _ := http.NewRequest("GET", "http://localhost:8000/events", nil)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6InBvc3RtYW5AZ21haWwuY29tIiwiZXhwIjoxNjM5NzY2MzY2LCJpc3MiOiJBdXRoU2VydmljZSJ9.wA0eqkUacIN0dxByR3A9JsXZsTVDbTmGndMqKx8_3Sc")
-
-	rr := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(eH.GetAll)
-
-	handler.ServeHTTP(rr, req)
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
-	}
 	//e := entity.Event{}
 	//hz:= io.Reader(rr.Body)
 	//fmt.Println("SOME DAATA", hz)

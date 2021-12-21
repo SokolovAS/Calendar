@@ -67,9 +67,14 @@ func (eventH *eventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	//}
 	//----------------------------------------------------------Should be removed
 
-	events, _ := eventH.eServ.GetAll()
+	events, err := eventH.eServ.GetAll()
 
 	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err = w.Write([]byte(`{"error":"internal server error"}`))
+	}
+
 	result, err := json.Marshal(events)
 	assertMarshalingError(w, err)
 
