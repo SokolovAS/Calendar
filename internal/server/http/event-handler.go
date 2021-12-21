@@ -4,7 +4,6 @@ import (
 	"Calendar/entity"
 	"Calendar/internal/services/calendar"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -55,18 +54,6 @@ func assertResponseError(err error) {
 }
 
 func (eventH *eventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	//---------------------------------------------------------Should be removed
-	//var user entity.User
-	//params := mux.Vars(r)
-	//email := params["email"]
-	//
-	//_, err := eventH.uServ.GetEmail(email)
-	//
-	//if err == gorm.ErrRecordNotFound {
-	//	assertGormError(w, `"error":"user not found"`)
-	//}
-	//----------------------------------------------------------Should be removed
-
 	events, err := eventH.eServ.GetAll()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -91,7 +78,8 @@ func (eventH *eventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	res, err := eventH.eServ.GetOne(event.Id)
 	if err != nil {
-		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err = w.Write([]byte(`{"error":"internal server error"}`))
 	}
 
 	result, err := json.Marshal(res)
@@ -107,7 +95,11 @@ func (eventH *eventHandler) Add(w http.ResponseWriter, r *http.Request) {
 	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
-	e, _ := eventH.eServ.Add(event)
+	e, err := eventH.eServ.Add(event)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err = w.Write([]byte(`{"error":"internal server error"}`))
+	}
 
 	result, err := json.Marshal(e)
 	assertMarshalingError(w, err)
@@ -122,7 +114,12 @@ func (eventH *eventHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
-	e, _ := eventH.eServ.Update(event)
+	e, err := eventH.eServ.Update(event)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err = w.Write([]byte(`{"error":"internal server error"}`))
+	}
 
 	result, err := json.Marshal(e)
 	assertMarshalingError(w, err)
