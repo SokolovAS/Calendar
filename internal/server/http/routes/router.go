@@ -1,6 +1,10 @@
-package http
+package routes
 
 import (
+	"Calendar/internal/middleware"
+	"Calendar/internal/repository"
+	http2 "Calendar/internal/server/http"
+	"Calendar/internal/services/calendar"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,8 +22,8 @@ type Router interface {
 
 type router struct {
 	mux   Router
-	auth  AuthHandler
-	event EventHandler
+	auth  *http2.AuthHandler
+	event *http2.EventHandler
 }
 
 func (r *router) Init() {
@@ -42,10 +46,19 @@ func (r *router) Init() {
 }
 
 func BuildRouts() {
-	r := router{
-		mux:   NewMuxRouter(),
-		auth:  NewAuthHandler(),
-		event: NewEventHandler(),
+	r := repository.NewSqliteRepo()
+	aS := calendar.NewAuthService(r)
+	uS := calendar.NewUserService(r)
+	eS := calendar.NewEventService(r)
+	mid := middleware.NewMiddleware(aS)
+
+	aH := http2.NewAuthHandler(aS, uS)
+	eH := http2.NewEventHandler(eS, uS)
+
+	router := router{
+		mux:   NewMuxRouter(mid),
+		auth:  aH,
+		event: eH,
 	}
-	r.Init()
+	router.Init()
 }

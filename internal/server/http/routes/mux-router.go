@@ -1,4 +1,4 @@
-package http
+package routes
 
 import (
 	middlewares "Calendar/internal/middleware"
@@ -6,18 +6,17 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-	_ "net/http"
 )
 
 type muxRouter struct {
 	dispatcher *mux.Router
-	mid        middlewares.Middleware
+	mid        *middlewares.Middleware
 }
 
-func NewMuxRouter() Router {
+func NewMuxRouter(mid *middlewares.Middleware) Router {
 	return &muxRouter{
 		dispatcher: mux.NewRouter(),
-		mid:        middlewares.NewMiddleware(),
+		mid:        mid,
 	}
 }
 

@@ -2,28 +2,27 @@ package http
 
 import (
 	"Calendar/entity"
-	"Calendar/internal/services/calendar"
 	"encoding/json"
 	"net/http"
 )
 
-type eventHandler struct {
-	eServ calendar.EventService
-	uServ calendar.UserService
+type EventHandler struct {
+	eServ EventService
+	uServ UserService
 }
 
-type EventHandler interface {
-	GetAll(w http.ResponseWriter, r *http.Request)
-	GetOne(w http.ResponseWriter, r *http.Request)
-	Add(w http.ResponseWriter, r *http.Request)
-	Update(w http.ResponseWriter, r *http.Request)
-	Delete(w http.ResponseWriter, r *http.Request)
-}
+//type EventHandler interface {
+//	GetAll(w http.ResponseWriter, r *http.Request)
+//	GetOne(w http.ResponseWriter, r *http.Request)
+//	Add(w http.ResponseWriter, r *http.Request)
+//	Update(w http.ResponseWriter, r *http.Request)
+//	Delete(w http.ResponseWriter, r *http.Request)
+//}
 
-func NewEventHandler() EventHandler {
-	return &eventHandler{
-		eServ: calendar.NewEventService(),
-		uServ: calendar.NewUserService(),
+func NewEventHandler(eS EventService, uS UserService) *EventHandler {
+	return &EventHandler{
+		eServ: eS,
+		uServ: uS,
 	}
 }
 
@@ -53,7 +52,7 @@ func assertResponseError(err error) {
 	}
 }
 
-func (eventH *eventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+func (eventH *EventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	events, err := eventH.eServ.GetAll()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -70,7 +69,7 @@ func (eventH *eventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	assertResponseError(err)
 }
 
-func (eventH *eventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
+func (eventH *EventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var event entity.Event
@@ -89,7 +88,7 @@ func (eventH *eventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 	assertResponseError(err)
 }
 
-func (eventH *eventHandler) Add(w http.ResponseWriter, r *http.Request) {
+func (eventH *EventHandler) Add(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var event entity.Event
@@ -108,7 +107,7 @@ func (eventH *eventHandler) Add(w http.ResponseWriter, r *http.Request) {
 	assertResponseError(err)
 }
 
-func (eventH *eventHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (eventH *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var event entity.Event
@@ -128,7 +127,7 @@ func (eventH *eventHandler) Update(w http.ResponseWriter, r *http.Request) {
 	assertResponseError(err)
 }
 
-func (eventH *eventHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (eventH *EventHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)

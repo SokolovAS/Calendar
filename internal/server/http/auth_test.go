@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-func NewAuthHandlerMock() AuthHandler {
-	return &authHandler{
+func NewAuthHandlerMock() *AuthHandler {
+	return &AuthHandler{
 		authS: &authServiceMock{},
 		userS: &userServiceMock{},
 	}
@@ -48,7 +48,7 @@ func (*authServiceMock) Validate(clientToken string) (string, error) {
 	return testEmail, nil
 }
 
-func NewAuthServiceMock() calendar.AuthService {
+func NewAuthServiceMock() AuthService {
 	return &authServiceMock{}
 }
 

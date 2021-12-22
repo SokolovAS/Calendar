@@ -1,12 +1,9 @@
 package calendar
 
 import (
-	"Calendar/database"
 	"Calendar/entity"
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
-	"log"
 )
 
 var events []entity.Event
@@ -17,33 +14,22 @@ func init() {
 	}
 }
 
-type EventService interface {
-	GetAll() ([]entity.Event, error)
-	GetOne(id string) (entity.Event, error)
-	Add(event entity.Event) (entity.Event, error)
-	Update(event entity.Event) (entity.Event, error)
-	Delete(id string)
+type EventService struct {
+	conn SqliteRepo
 }
 
-type eventService struct {
-	conn *gorm.DB
-}
+func NewEventService(r SqliteRepo) *EventService {
 
-func NewEventService() EventService {
-	connection, err := database.NewGormDB()
-	if err != nil {
-		log.Fatal("Error db connection")
-	}
-	return &eventService{
-		conn: connection,
+	return &EventService{
+		conn: r,
 	}
 }
 
-func (*eventService) GetAll() ([]entity.Event, error) {
+func (*EventService) GetAll() ([]entity.Event, error) {
 	return events, nil
 }
 
-func (*eventService) GetOne(id string) (entity.Event, error) {
+func (*EventService) GetOne(id string) (entity.Event, error) {
 	var res entity.Event
 	var exist bool
 
@@ -61,12 +47,12 @@ func (*eventService) GetOne(id string) (entity.Event, error) {
 	return res, errors.New("not able to find the event")
 }
 
-func (*eventService) Add(event entity.Event) (entity.Event, error) {
+func (*EventService) Add(event entity.Event) (entity.Event, error) {
 	events = append(events, event)
 	return event, nil
 }
 
-func (*eventService) Update(event entity.Event) (entity.Event, error) {
+func (*EventService) Update(event entity.Event) (entity.Event, error) {
 	var pos int
 
 	for i, e := range events {
@@ -84,7 +70,7 @@ func (*eventService) Update(event entity.Event) (entity.Event, error) {
 	return events[pos], nil
 }
 
-func (*eventService) Delete(id string) {
+func (*EventService) Delete(id string) {
 	var pos int
 	var exists = false
 

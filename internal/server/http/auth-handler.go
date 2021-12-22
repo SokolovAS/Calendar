@@ -8,25 +8,41 @@ import (
 	"net/http"
 )
 
-type authHandler struct {
-	authS calendar.AuthService
-	userS calendar.UserService
+type AuthService interface {
+	GenerateToken(email string, j *calendar.JwtWrapper) (signedToken string, err error)
+	ValidateToken(signedToken string, j *calendar.JwtWrapper) (claims *calendar.JwtClaim, err error)
+	Validate(clientToken string) (string, error)
 }
 
-type AuthHandler interface {
-	Signup(w http.ResponseWriter, r *http.Request)
-	Login(w http.ResponseWriter, r *http.Request)
+type EventService interface {
+	GetAll() ([]entity.Event, error)
+	GetOne(id string) (entity.Event, error)
+	Add(event entity.Event) (entity.Event, error)
+	Update(event entity.Event) (entity.Event, error)
+	Delete(id string)
 }
 
-func NewAuthHandler() AuthHandler {
-	return &authHandler{
-		authS: calendar.NewAuthService(),
-		userS: calendar.NewUserService(),
+type UserService interface {
+	CreateUserRecord(m entity.User) error
+	HashPassword(m *entity.User) error
+	CheckPassword(providedPassword string, userPassword string) error
+	GetEmail(email string) (entity.User, error)
+}
+
+type AuthHandler struct {
+	authS AuthService
+	userS UserService
+}
+
+func NewAuthHandler(aS AuthService, uS UserService) *AuthHandler {
+	return &AuthHandler{
+		authS: aS,
+		userS: uS,
 	}
 }
 
 // Signup creates a user in db
-func (aH *authHandler) Signup(w http.ResponseWriter, r *http.Request) {
+func (aH *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	user := entity.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -65,7 +81,7 @@ type LoginResponse struct {
 }
 
 // Login logs users in
-func (aH *authHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (aH *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var payload LoginPayload
 
 	err := json.NewDecoder(r.Body).Decode(&payload)

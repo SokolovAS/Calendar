@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	http2 "Calendar/internal/server/http"
 	"Calendar/internal/services/calendar"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -24,13 +25,13 @@ func (*authServiceMock) Validate(clientToken string) (string, error) {
 	return testEmail, nil
 }
 
-func NewAuthServiceMock() calendar.AuthService {
+func NewAuthServiceMock() http2.AuthService {
 	return &authServiceMock{}
 }
 
-func NewMiddlewareMock() Middleware {
-	return &middleware{
-		authS: NewAuthServiceMock(),
+func NewMiddlewareMock(aS AuthService) *Middleware {
+	return &Middleware{
+		authS: aS,
 	}
 }
 
@@ -47,7 +48,8 @@ func TestAuthz(t *testing.T) {
 		}
 	}
 
-	mid := NewMiddlewareMock()
+	aSmock := NewAuthServiceMock()
+	mid := NewMiddlewareMock(aSmock)
 	h1 := mid.Authz(http.HandlerFunc(fn1))
 	req, _ := http.NewRequest("GET", "http://localhost:8000/events", nil)
 	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6InBvc3RtYW5AZ21haWwuY29tIiwiZXhwIjoxNjM5NzY2MzY2LCJpc3MiOiJBdXRoU2VydmljZSJ9.wA0eqkUacIN0dxByR3A9JsXZsTVDbTmGndMqKx8_3Sc")

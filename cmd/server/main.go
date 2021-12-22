@@ -3,7 +3,7 @@ package main
 import (
 	"Calendar/database"
 	"Calendar/entity"
-	"Calendar/internal/server/http"
+	"Calendar/internal/server/http/routes"
 	"log"
 )
 
@@ -17,5 +17,5 @@ func main() {
 		log.Fatalln("could not migrate user model", err)
 	}
 
-	http.BuildRouts()
+	routes.BuildRouts()
 }

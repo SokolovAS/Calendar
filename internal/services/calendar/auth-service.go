@@ -7,18 +7,12 @@ import (
 	"time"
 )
 
-type authService struct {
+type AuthService struct {
 	Claim JwtClaim
 }
 
-type AuthService interface {
-	GenerateToken(email string, j *JwtWrapper) (signedToken string, err error)
-	ValidateToken(signedToken string, j *JwtWrapper) (claims *JwtClaim, err error)
-	Validate(clientToken string) (string, error)
-}
-
-func NewAuthService() AuthService {
-	return &authService{}
+func NewAuthService(r SqliteRepo) *AuthService {
+	return &AuthService{}
 }
 
 // JwtWrapper wraps the signing key and the issuer
@@ -35,7 +29,7 @@ type JwtClaim struct {
 }
 
 // GenerateToken generates a jwt token
-func (*authService) GenerateToken(email string, j *JwtWrapper) (signedToken string, err error) {
+func (*AuthService) GenerateToken(email string, j *JwtWrapper) (signedToken string, err error) {
 	claims := &JwtClaim{
 		Email: email,
 		StandardClaims: jwt.StandardClaims{
@@ -55,7 +49,7 @@ func (*authService) GenerateToken(email string, j *JwtWrapper) (signedToken stri
 }
 
 //ValidateToken validates the jwt token
-func (*authService) ValidateToken(signedToken string, j *JwtWrapper) (claims *JwtClaim, err error) {
+func (*AuthService) ValidateToken(signedToken string, j *JwtWrapper) (claims *JwtClaim, err error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&JwtClaim{},
@@ -81,7 +75,7 @@ func (*authService) ValidateToken(signedToken string, j *JwtWrapper) (claims *Jw
 	return
 }
 
-func (aS *authService) Validate(clientToken string) (string, error) {
+func (aS *AuthService) Validate(clientToken string) (string, error) {
 	if clientToken == "" {
 		return "", errors.New(`"error":"No Authorization header provided"`)
 	}

@@ -19,8 +19,8 @@ func (*sqliteRepoMock) GetEmail(email string) (entity.User, error) {
 	return entity.User{Email: email}, nil
 }
 
-func NewUserServiceMock() UserService {
-	return &userService{
+func NewUserServiceMock() *UserService {
+	return &UserService{
 		repo: &sqliteRepoMock{},
 	}
 }

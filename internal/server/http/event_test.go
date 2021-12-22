@@ -2,7 +2,6 @@ package http
 
 import (
 	"Calendar/entity"
-	"Calendar/internal/services/calendar"
 	"bytes"
 	"errors"
 	"github.com/golang/mock/gomock"
@@ -15,13 +14,13 @@ func TestGetAll(t *testing.T) {
 
 	testCases := []struct {
 		name    string
-		mock    func(ctrl *gomock.Controller) calendar.EventService
+		mock    func(ctrl *gomock.Controller) EventService
 		wantErr bool
 	}{
 		{
 			name:    "success",
 			wantErr: false,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 				events := []entity.Event{
 					{"1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
 				}
@@ -34,7 +33,7 @@ func TestGetAll(t *testing.T) {
 		{
 			name:    "bad path",
 			wantErr: true,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 
 				eS := NewMockEventService(ctrl)
 
@@ -50,7 +49,7 @@ func TestGetAll(t *testing.T) {
 			defer ctl.Finish()
 
 			eS := tc.mock(ctl)
-			eH := eventHandler{
+			eH := EventHandler{
 				eServ: eS,
 			}
 
@@ -96,13 +95,13 @@ func TestGetAll(t *testing.T) {
 func TestGetOne(t *testing.T) {
 	testCases := []struct {
 		name    string
-		mock    func(ctrl *gomock.Controller) calendar.EventService
+		mock    func(ctrl *gomock.Controller) EventService
 		wantErr bool
 	}{
 		{
 			name:    "success",
 			wantErr: false,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 
 				eS := NewMockEventService(ctrl)
 				eS.EXPECT().GetOne(gomock.Any()).Return(entity.Event{Id: "1"}, nil)
@@ -113,7 +112,7 @@ func TestGetOne(t *testing.T) {
 		{
 			name:    "bad path",
 			wantErr: true,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 
 				eS := NewMockEventService(ctrl)
 				eS.EXPECT().GetOne(gomock.Any()).Return(entity.Event{}, errors.New("error getting event"))
@@ -129,7 +128,7 @@ func TestGetOne(t *testing.T) {
 			defer ctl.Finish()
 
 			eS := tc.mock(ctl)
-			eH := eventHandler{
+			eH := EventHandler{
 				eServ: eS,
 			}
 
@@ -161,13 +160,13 @@ func TestGetOne(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	testCases := []struct {
 		name    string
-		mock    func(ctrl *gomock.Controller) calendar.EventService
+		mock    func(ctrl *gomock.Controller) EventService
 		wantErr bool
 	}{
 		{
 			name:    "success",
 			wantErr: false,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 
 				eS := NewMockEventService(ctrl)
 				eS.EXPECT().Update(gomock.Any()).Return(entity.Event{Id: "1", Title: "Title updated"}, nil)
@@ -178,7 +177,7 @@ func TestUpdate(t *testing.T) {
 		{
 			name:    "bad path",
 			wantErr: true,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 
 				eS := NewMockEventService(ctrl)
 				eS.EXPECT().Update(gomock.Any()).Return(entity.Event{}, errors.New("error updating event"))
@@ -194,7 +193,7 @@ func TestUpdate(t *testing.T) {
 			defer ctl.Finish()
 
 			eS := tc.mock(ctl)
-			eH := eventHandler{
+			eH := EventHandler{
 				eServ: eS,
 			}
 
@@ -225,13 +224,13 @@ func TestUpdate(t *testing.T) {
 func TestAdd(t *testing.T) {
 	testCases := []struct {
 		name    string
-		mock    func(ctrl *gomock.Controller) calendar.EventService
+		mock    func(ctrl *gomock.Controller) EventService
 		wantErr bool
 	}{
 		{
 			name:    "success",
 			wantErr: false,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 
 				eS := NewMockEventService(ctrl)
 				eS.EXPECT().Add(entity.Event{Id: "2", Title: "Title NEW"}).Return(entity.Event{Id: "2", Title: "Title NEW"}, nil)
@@ -242,7 +241,7 @@ func TestAdd(t *testing.T) {
 		{
 			name:    "bad path",
 			wantErr: true,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 
 				eS := NewMockEventService(ctrl)
 				eS.EXPECT().Add(entity.Event{Id: "2", Title: "Title NEW"}).Return(entity.Event{}, errors.New("error adding event"))
@@ -258,7 +257,7 @@ func TestAdd(t *testing.T) {
 			defer ctl.Finish()
 
 			eS := tc.mock(ctl)
-			eH := eventHandler{
+			eH := EventHandler{
 				eServ: eS,
 			}
 
@@ -289,13 +288,13 @@ func TestAdd(t *testing.T) {
 func TestDelete(t *testing.T) {
 	testCases := []struct {
 		name    string
-		mock    func(ctrl *gomock.Controller) calendar.EventService
+		mock    func(ctrl *gomock.Controller) EventService
 		wantErr bool
 	}{
 		{
 			name:    "success",
 			wantErr: false,
-			mock: func(ctrl *gomock.Controller) calendar.EventService {
+			mock: func(ctrl *gomock.Controller) EventService {
 
 				eS := NewMockEventService(ctrl)
 				eS.EXPECT().Delete(gomock.Any())
@@ -311,7 +310,7 @@ func TestDelete(t *testing.T) {
 			defer ctl.Finish()
 
 			eS := tc.mock(ctl)
-			eH := eventHandler{
+			eH := EventHandler{
 				eServ: eS,
 			}
 

@@ -1,27 +1,26 @@
 package middleware
 
 import (
-	"Calendar/internal/services/calendar"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
-type Middleware interface {
-	Authz(http.Handler) http.Handler
+type AuthService interface {
+	Validate(clientToken string) (string, error)
 }
 
-type middleware struct {
-	authS calendar.AuthService
+type Middleware struct {
+	authS AuthService
 }
 
-func NewMiddleware() Middleware {
-	return &middleware{
-		authS: calendar.NewAuthService(),
+func NewMiddleware(a AuthService) *Middleware {
+	return &Middleware{
+		authS: a,
 	}
 }
 
 // Authz validates token and authorizes users
-func (m *middleware) Authz(next http.Handler) http.Handler {
+func (m *Middleware) Authz(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		clientToken := r.Header.Get("Authorization")
 		email, err := m.authS.Validate(clientToken)

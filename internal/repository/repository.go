@@ -8,11 +8,6 @@ import (
 	"log"
 )
 
-type SqliteRepo interface {
-	Create(*entity.User)
-	GetEmail(email string) (entity.User, error)
-}
-
 type sqliteRepo struct {
 	gormConnection gormConnection
 }
