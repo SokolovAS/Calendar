@@ -11,7 +11,7 @@ type AuthService struct {
 	Claim JwtClaim
 }
 
-func NewAuthService(r SqliteRepo) *AuthService {
+func NewAuthService() *AuthService {
 	return &AuthService{}
 }
 
@@ -44,7 +44,6 @@ func (*AuthService) GenerateToken(email string, j *JwtWrapper) (signedToken stri
 	if err != nil {
 		return
 	}
-
 	return
 }
 
