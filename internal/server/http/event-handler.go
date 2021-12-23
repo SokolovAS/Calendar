@@ -37,7 +37,7 @@ func assertMarshalingError(w http.ResponseWriter, err error) {
 	}
 }
 
-func assertGormError(w http.ResponseWriter, error string) {
+func assertError(w http.ResponseWriter, error string) {
 	w.WriteHeader(http.StatusInternalServerError)
 	write, err := w.Write([]byte(error))
 	if err != nil {

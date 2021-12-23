@@ -2,6 +2,7 @@ package calendar
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"strings"
 	"time"
@@ -28,6 +29,15 @@ type JwtClaim struct {
 	jwt.StandardClaims
 }
 
+type TokenGenerateError struct {
+	Code    int
+	Message string
+}
+
+func (e TokenGenerateError) Error() string {
+	return fmt.Sprintf("Code %s, message: %v", e.Code, e.Message)
+}
+
 // GenerateToken generates a jwt token
 func (*AuthService) GenerateToken(email string, j *JwtWrapper) (signedToken string, err error) {
 	claims := &JwtClaim{
@@ -42,7 +52,8 @@ func (*AuthService) GenerateToken(email string, j *JwtWrapper) (signedToken stri
 
 	signedToken, err = token.SignedString([]byte(j.SecretKey))
 	if err != nil {
-		return
+		e := &TokenGenerateError{1, "Error token generation"}
+		return "", e
 	}
 	return
 }

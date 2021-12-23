@@ -4,6 +4,8 @@ import (
 	"Calendar/entity"
 	"Calendar/internal/services/calendar"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -93,13 +95,13 @@ func (aH *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	user, err := aH.userS.GetEmail(payload.Email)
 
 	if err != nil {
-		assertGormError(w, `"error":"Error fetching data"`)
+		assertError(w, `"error":"Error fetching data"`)
 	}
 
 	err = aH.userS.CheckPassword(payload.Password, user.Password)
 	if err != nil {
 		log.Println(err)
-		assertGormError(w, `"error":"Error password"`)
+		assertError(w, `"error":"Error password"`)
 	}
 
 	jwtWrapper := calendar.JwtWrapper{
@@ -110,7 +112,17 @@ func (aH *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	signedToken, err := aH.authS.GenerateToken(user.Email, &jwtWrapper)
 	if err != nil {
-		assertGormError(w, `"msg": "error signing token"`)
+		var tge *calendar.TokenGenerateError
+		if errors.As(err, &tge) {
+			w.WriteHeader(http.StatusInternalServerError)
+			mess := fmt.Sprintf("%#v\n", tge)
+			write, err := w.Write([]byte(mess))
+			if err != nil {
+				return
+			}
+			_ = write
+		}
+		assertError(w, `"msg": "error signing token"`)
 	}
 
 	tokenResponse := LoginResponse{
