@@ -10,8 +10,16 @@ var events []entity.Event
 
 func init() {
 	events = []entity.Event{
-		{"1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
+		{"1", "1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
 	}
+}
+
+type RepoPG interface {
+	GetAllEvents() ([]entity.Event, error)
+	GetOne(id int) (entity.Event, error)
+	Add(e entity.Event) error
+	Update(e entity.Event) error
+	Delete(id int) error
 }
 
 type EventService struct {

@@ -2,6 +2,7 @@ package entity
 
 type Event struct {
 	Id          string `json:"id"`
+	IdUser      string `json:"id_user"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	DateTime    string `json:"dateTime"`
