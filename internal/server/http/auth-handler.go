@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type AuthService interface {
-	GenerateToken(email string, j *calendar.JwtWrapper) (signedToken string, err error)
+	GenerateToken(id string, email string, j *calendar.JwtWrapper) (signedToken string, err error)
 	ValidateToken(signedToken string, j *calendar.JwtWrapper) (claims *calendar.JwtClaim, err error)
-	Validate(clientToken string) (string, error)
+	Validate(clientToken string) (*calendar.JwtClaim, error)
 }
 
 type EventService interface {
@@ -111,7 +112,7 @@ func (aH *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		ExpirationHours: 24,
 	}
 
-	signedToken, err := aH.authS.GenerateToken(user.Email, &jwtWrapper)
+	signedToken, err := aH.authS.GenerateToken(strconv.Itoa(int(user.ID)), user.Email, &jwtWrapper)
 	if err != nil {
 		var tge *calendar.TokenGenerateError
 		if errors.As(err, &tge) {

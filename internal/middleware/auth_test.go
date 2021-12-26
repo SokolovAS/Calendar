@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"Calendar/internal/services/calendar"
 	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
@@ -24,7 +25,7 @@ func TestAuthz(t *testing.T) {
 			mock: func(ctrl *gomock.Controller) AuthService {
 
 				aS := NewMockAuthService(ctrl)
-				aS.EXPECT().Validate(gomock.Any()).Return(testEmail, nil)
+				aS.EXPECT().Validate(gomock.Any()).Return(&calendar.JwtClaim{Email: testEmail}, nil)
 				return aS
 			},
 		},
@@ -34,7 +35,7 @@ func TestAuthz(t *testing.T) {
 			mock: func(ctrl *gomock.Controller) AuthService {
 
 				aS := NewMockAuthService(ctrl)
-				aS.EXPECT().Validate(gomock.Any()).Return("", errors.New("Error!"))
+				aS.EXPECT().Validate(gomock.Any()).Return(&calendar.JwtClaim{}, errors.New("Error!"))
 				return aS
 			},
 		},

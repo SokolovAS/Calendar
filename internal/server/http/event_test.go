@@ -22,7 +22,7 @@ func TestGetAll(t *testing.T) {
 			wantErr: false,
 			mock: func(ctrl *gomock.Controller) EventService {
 				events := []entity.Event{
-					{"1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
+					{"1", "1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
 				}
 				eS := NewMockEventService(ctrl)
 

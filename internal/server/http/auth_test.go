@@ -35,7 +35,7 @@ func (*userServiceMock) GetEmail(email string) (entity.User, error) {
 
 type authServiceMock struct{}
 
-func (m *authServiceMock) GenerateToken(email string, j *calendar.JwtWrapper) (signedToken string, err error) {
+func (m *authServiceMock) GenerateToken(id string, email string, j *calendar.JwtWrapper) (signedToken string, err error) {
 	return
 }
 
@@ -43,9 +43,9 @@ func (m *authServiceMock) ValidateToken(signedToken string, j *calendar.JwtWrapp
 	return
 }
 
-func (*authServiceMock) Validate(clientToken string) (string, error) {
+func (*authServiceMock) Validate(clientToken string) (*calendar.JwtClaim, error) {
 	_ = clientToken
-	return testEmail, nil
+	return &calendar.JwtClaim{}, nil
 }
 
 func NewAuthServiceMock() AuthService {

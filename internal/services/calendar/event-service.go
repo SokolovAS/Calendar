@@ -32,7 +32,7 @@ type ServiceErr struct {
 }
 
 func (e ServiceErr) Error() string {
-	return fmt.Sprintf("Code %s, message: %v", e.Code, e.Message)
+	return fmt.Sprintf("Code %d, message: %v", e.Code, e.Message)
 }
 
 func (eS *EventService) GetAll() ([]entity.Event, error) {

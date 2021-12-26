@@ -46,9 +46,10 @@ func (mr *MockEventServiceMockRecorder) Add(event interface{}) *gomock.Call {
 }
 
 // Delete mocks base method.
-func (m *MockEventService) Delete(id string) {
+func (m *MockEventService) Delete(id string) error {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Delete", id)
+	return nil
 }
 
 // Delete indicates an expected call of Delete.

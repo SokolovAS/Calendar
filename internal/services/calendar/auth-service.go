@@ -25,6 +25,7 @@ type JwtWrapper struct {
 
 // JwtClaim adds email as a claim to the token
 type JwtClaim struct {
+	Id    string
 	Email string
 	jwt.StandardClaims
 }
@@ -35,12 +36,13 @@ type TokenGenerateError struct {
 }
 
 func (e TokenGenerateError) Error() string {
-	return fmt.Sprintf("Code %s, message: %v", e.Code, e.Message)
+	return fmt.Sprintf("Code %d, message: %v", e.Code, e.Message)
 }
 
 // GenerateToken generates a jwt token
-func (*AuthService) GenerateToken(email string, j *JwtWrapper) (signedToken string, err error) {
+func (*AuthService) GenerateToken(id string, email string, j *JwtWrapper) (signedToken string, err error) {
 	claims := &JwtClaim{
+		Id:    id,
 		Email: email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.ExpirationHours)).Unix(),
@@ -85,9 +87,9 @@ func (*AuthService) ValidateToken(signedToken string, j *JwtWrapper) (claims *Jw
 	return
 }
 
-func (aS *AuthService) Validate(clientToken string) (string, error) {
+func (aS *AuthService) Validate(clientToken string) (*JwtClaim, error) {
 	if clientToken == "" {
-		return "", errors.New(`"error":"No Authorization header provided"`)
+		return &JwtClaim{}, errors.New(`"error":"No Authorization header provided"`)
 	}
 
 	extractedToken := strings.Split(clientToken, "Bearer ")
@@ -95,7 +97,7 @@ func (aS *AuthService) Validate(clientToken string) (string, error) {
 	if len(extractedToken) == 2 {
 		clientToken = strings.TrimSpace(extractedToken[1])
 	} else {
-		return "", errors.New(`"error":"Incorrect Format of Authorization Token`)
+		return &JwtClaim{}, errors.New(`"error":"Incorrect Format of Authorization Token`)
 	}
 
 	jwtWrapper := JwtWrapper{
@@ -105,8 +107,8 @@ func (aS *AuthService) Validate(clientToken string) (string, error) {
 
 	claims, err := aS.ValidateToken(clientToken, &jwtWrapper)
 	if err != nil {
-		return "", errors.New(`"error":"Error token validation"`)
+		return &JwtClaim{}, errors.New(`"error":"Error token validation"`)
 	}
 
-	return claims.Email, err
+	return claims, err
 }

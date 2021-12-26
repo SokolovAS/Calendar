@@ -13,7 +13,7 @@ func TestGenerateToken(t *testing.T) {
 	}
 	serv := NewAuthService()
 
-	_, err := serv.GenerateToken("email@test.com", &jwtWrapper)
+	_, err := serv.GenerateToken("1", "email@test.com", &jwtWrapper)
 	if err != nil {
 		t.Errorf("error %s", err)
 	}
@@ -26,7 +26,7 @@ func TestValidate(t *testing.T) {
 		ExpirationHours: 24,
 	}
 	serv := NewAuthService()
-	newToken, err := serv.GenerateToken("email@test.com", &jwtWrapper)
+	newToken, err := serv.GenerateToken("1", "email@test.com", &jwtWrapper)
 
 	_, err = serv.Validate("Bearer " + newToken)
 	if err != nil {
