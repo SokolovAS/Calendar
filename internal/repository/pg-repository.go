@@ -42,7 +42,7 @@ func (r *RepoPG) GetAllEvents() ([]entity.Event, error) {
 	return events, err
 }
 
-func (r *RepoPG) GetOne(id int) (entity.Event, error) {
+func (r *RepoPG) GetOne(id string) (entity.Event, error) {
 	row := r.conn.QueryRow("select * from event where id = $1", id)
 	e := entity.Event{}
 	err := row.Scan(&e.Id, &e.IdUser, &e.Title, &e.Description)
@@ -61,14 +61,14 @@ func (r *RepoPG) Add(e entity.Event) error {
 }
 
 func (r *RepoPG) Update(e entity.Event) error {
-	_, err := r.conn.Exec("update event set title = $1 where description = $2", e.Title, e.Title)
+	_, err := r.conn.Exec("update event set title = $1, description = $2 where id = $3", e.Title, e.Description, e.Id)
 	if err != nil {
 		return RepoError{500, "error updating data"}
 	}
 	return err
 }
 
-func (r *RepoPG) Delete(id int) error {
+func (r *RepoPG) Delete(id string) error {
 	_, err := r.conn.Exec("delete from event where id = $1", id)
 	if err != nil {
 		return RepoError{500, "Error deleting an event"}
@@ -91,6 +91,6 @@ func InitPG() (*sql.DB, error) {
 	if err != nil {
 		return db, RepoError{500, "error PG connection"}
 	}
-	defer db.Close()
+	//defer db.Close()
 	return db, nil
 }

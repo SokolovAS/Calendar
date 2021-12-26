@@ -21,7 +21,7 @@ type EventService interface {
 	GetOne(id string) (entity.Event, error)
 	Add(event entity.Event) (entity.Event, error)
 	Update(event entity.Event) (entity.Event, error)
-	Delete(id string)
+	Delete(id string) error
 }
 
 type UserService interface {

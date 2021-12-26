@@ -1,6 +1,8 @@
 package repository
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestInitPG(t *testing.T) {
 	_, err := InitPG()

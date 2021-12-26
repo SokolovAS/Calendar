@@ -2,102 +2,105 @@ package calendar
 
 import (
 	"Calendar/entity"
+	"Calendar/internal/repository"
 	"errors"
 	"fmt"
 )
 
-var events []entity.Event
-
-func init() {
-	events = []entity.Event{
-		{"1", "1", "Title1", "Description1", "DateTiem", "Duration1", "Notes1"},
-	}
-}
-
 type RepoPG interface {
 	GetAllEvents() ([]entity.Event, error)
-	GetOne(id int) (entity.Event, error)
+	GetOne(id string) (entity.Event, error)
 	Add(e entity.Event) error
 	Update(e entity.Event) error
-	Delete(id int) error
+	Delete(id string) error
 }
 
 type EventService struct {
-	conn SqliteRepo
+	conn RepoPG
 }
 
-func NewEventService(r SqliteRepo) *EventService {
+func NewEventService(r RepoPG) *EventService {
 
 	return &EventService{
 		conn: r,
 	}
 }
 
-func (*EventService) GetAll() ([]entity.Event, error) {
+type ServiceErr struct {
+	Code    int
+	Message string
+}
+
+func (e ServiceErr) Error() string {
+	return fmt.Sprintf("Code %s, message: %v", e.Code, e.Message)
+}
+
+func (eS *EventService) GetAll() ([]entity.Event, error) {
+	events, err := eS.conn.GetAllEvents()
+	if err != nil {
+		repoErr := repository.RepoError{}
+		errors.As(err, &repoErr)
+		err := ServiceErr{
+			Code:    500,
+			Message: fmt.Sprintf("%#v\n", repoErr),
+		}
+		return nil, err
+	}
 	return events, nil
 }
 
-func (*EventService) GetOne(id string) (entity.Event, error) {
-	var res entity.Event
-	var exist bool
-
-	for _, e := range events {
-		if e.Id == id {
-			res = e
-			exist = true
+func (eS *EventService) GetOne(id string) (entity.Event, error) {
+	e, err := eS.conn.GetOne(id)
+	if err != nil {
+		repoErr := repository.RepoError{}
+		errors.As(err, &repoErr)
+		err := ServiceErr{
+			Code:    500,
+			Message: fmt.Sprintf("%#v\n", repoErr),
 		}
+		return entity.Event{}, err
 	}
-
-	if exist {
-		return res, nil
-	}
-
-	return res, errors.New("not able to find the event")
+	return e, errors.New("not able to find the event")
 }
 
-func (*EventService) Add(event entity.Event) (entity.Event, error) {
-	events = append(events, event)
+func (eS *EventService) Add(event entity.Event) (entity.Event, error) {
+	err := eS.conn.Add(event)
+	if err != nil {
+		repoErr := repository.RepoError{}
+		errors.As(err, &repoErr)
+		err := ServiceErr{
+			Code:    500,
+			Message: fmt.Sprintf("%#v\n", repoErr),
+		}
+		return entity.Event{}, err
+	}
 	return event, nil
 }
 
-func (*EventService) Update(event entity.Event) (entity.Event, error) {
-	var pos int
-
-	for i, e := range events {
-		if e.Id == event.Id {
-			pos = i
+func (eS *EventService) Update(event entity.Event) (entity.Event, error) {
+	err := eS.conn.Update(event)
+	if err != nil {
+		repoErr := repository.RepoError{}
+		errors.As(err, &repoErr)
+		err := ServiceErr{
+			Code:    500,
+			Message: fmt.Sprintf("%#v\n", repoErr),
 		}
+		return entity.Event{}, err
 	}
-
-	events[pos].Title = event.Title
-	events[pos].Description = event.Description
-	events[pos].Duration = event.Duration
-	events[pos].DateTime = event.DateTime
-	events[pos].Notes = event.Notes
-
-	return events[pos], nil
+	return event, err
 }
 
-func (*EventService) Delete(id string) {
-	var pos int
-	var exists = false
-
-	for i, e := range events {
-		if e.Id == id {
-			fmt.Println("Found it")
-			exists = true
-			pos = i
-			break
-		} else {
-			exists = false
+func (eS *EventService) Delete(id string) error {
+	err := eS.conn.Delete(id)
+	if err != nil {
+		repoErr := repository.RepoError{}
+		errors.As(err, &repoErr)
+		err := ServiceErr{
+			Code:    500,
+			Message: fmt.Sprintf("%#v\n", repoErr),
 		}
+		return err
 	}
-
-	if exists == true {
-		events = removeIndex(events, pos)
-	}
-}
-
-func removeIndex(s []entity.Event, i int) []entity.Event {
-	return append(s[:i], s[i+1:]...)
+	return err
 }

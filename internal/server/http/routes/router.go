@@ -46,10 +46,11 @@ func (r *router) Init() {
 }
 
 func BuildRouts() {
-	r := repository.NewSqliteRepo()
+	repoPG := repository.NewRepoPG()
+	rSqlite := repository.NewSqliteRepo()
 	aS := calendar.NewAuthService()
-	uS := calendar.NewUserService(r)
-	eS := calendar.NewEventService(r)
+	uS := calendar.NewUserService(rSqlite)
+	eS := calendar.NewEventService(repoPG)
 	mid := middleware.NewMiddleware(aS)
 
 	aH := http2.NewAuthHandler(aS, uS)
