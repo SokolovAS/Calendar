@@ -87,6 +87,7 @@ func (aH *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var payload LoginPayload
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
+	fmt.Println("BODY", err)
 	if err != nil {
 		log.Println(err)
 		assertMarshalingError(w, err)

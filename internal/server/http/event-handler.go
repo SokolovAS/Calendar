@@ -3,6 +3,7 @@ package http
 import (
 	"Calendar/entity"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -77,6 +78,7 @@ func (eventH *EventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	res, err := eventH.eServ.GetOne(event.Id)
 	if err != nil {
+		fmt.Println("SOME ERROR!", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err = w.Write([]byte(`{"error":"internal server error"}`))
 	}

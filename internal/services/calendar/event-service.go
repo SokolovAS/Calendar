@@ -60,7 +60,7 @@ func (eS *EventService) GetOne(id string) (entity.Event, error) {
 		}
 		return entity.Event{}, err
 	}
-	return e, errors.New("not able to find the event")
+	return e, nil
 }
 
 func (eS *EventService) Add(event entity.Event) (entity.Event, error) {

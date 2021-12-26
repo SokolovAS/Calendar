@@ -22,19 +22,19 @@ func NewMuxRouter(mid *middlewares.Middleware) Router {
 
 func (m *muxRouter) GET(uri string, f func(w http.ResponseWriter, r *http.Request)) {
 	m.dispatcher.HandleFunc(uri, f).Methods(http.MethodGet)
-	m.dispatcher.Use(m.mid.Authz)
+	//m.dispatcher.Use(m.mid.Authz)
 }
 func (m *muxRouter) POST(uri string, f func(w http.ResponseWriter, r *http.Request)) {
 	m.dispatcher.HandleFunc(uri, f).Methods(http.MethodPost)
-	m.dispatcher.Use(m.mid.Authz)
+	//m.dispatcher.Use(m.mid.Authz)
 }
 func (m *muxRouter) PUT(uri string, f func(w http.ResponseWriter, r *http.Request)) {
 	m.dispatcher.HandleFunc(uri, f).Methods(http.MethodPut)
-	m.dispatcher.Use(m.mid.Authz)
+	//m.dispatcher.Use(m.mid.Authz)
 }
 func (m *muxRouter) DELETE(uri string, f func(w http.ResponseWriter, r *http.Request)) {
 	m.dispatcher.HandleFunc(uri, f).Methods(http.MethodDelete)
-	m.dispatcher.Use(m.mid.Authz)
+	//m.dispatcher.Use(m.mid.Authz)
 }
 func (m *muxRouter) SERVE(port string) {
 	fmt.Printf("Mux http server is running on port %v", port)
