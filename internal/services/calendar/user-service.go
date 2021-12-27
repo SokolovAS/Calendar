@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"Calendar/entity"
-	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -41,7 +40,10 @@ func (s *UserService) HashPassword(m *entity.User) error {
 func (s *UserService) CheckPassword(providedPassword string, userPassword string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(providedPassword))
 	if err != nil {
-		return err
+		return ServiceErr{
+			Code:    401,
+			Message: "incorrect password",
+		}
 	}
 	return nil
 }
@@ -49,7 +51,8 @@ func (s *UserService) CheckPassword(providedPassword string, userPassword string
 func (s *UserService) GetEmail(email string) (entity.User, error) {
 	user, err := s.repo.GetEmail(email)
 	if err == gorm.ErrRecordNotFound {
-		return user, errors.New(`"error":"Error fetching data"`)
+		e := &ServiceErr{422, "Error fetching data"}
+		return user, e
 	}
 	return user, nil
 }

@@ -102,7 +102,16 @@ func (aH *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	err = aH.userS.CheckPassword(payload.Password, user.Password)
 	if err != nil {
-		log.Println(err)
+		var tge *calendar.ServiceErr
+		if errors.As(err, &tge) {
+			w.WriteHeader(tge.Code)
+			mess := fmt.Sprintf("%#v\n", tge)
+			write, err := w.Write([]byte(mess))
+			if err != nil {
+				return
+			}
+			_ = write
+		}
 		assertError(w, `"error":"Error password"`)
 	}
 
@@ -114,9 +123,9 @@ func (aH *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	signedToken, err := aH.authS.GenerateToken(strconv.Itoa(int(user.ID)), user.Email, &jwtWrapper)
 	if err != nil {
-		var tge *calendar.TokenGenerateError
+		var tge *calendar.ServiceErr
 		if errors.As(err, &tge) {
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(tge.Code)
 			mess := fmt.Sprintf("%#v\n", tge)
 			write, err := w.Write([]byte(mess))
 			if err != nil {

@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"errors"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"strings"
 	"time"
@@ -30,15 +29,6 @@ type JwtClaim struct {
 	jwt.StandardClaims
 }
 
-type TokenGenerateError struct {
-	Code    int
-	Message string
-}
-
-func (e TokenGenerateError) Error() string {
-	return fmt.Sprintf("Code %d, message: %v", e.Code, e.Message)
-}
-
 // GenerateToken generates a jwt token
 func (*AuthService) GenerateToken(id string, email string, j *JwtWrapper) (signedToken string, err error) {
 	claims := &JwtClaim{
@@ -54,7 +44,7 @@ func (*AuthService) GenerateToken(id string, email string, j *JwtWrapper) (signe
 
 	signedToken, err = token.SignedString([]byte(j.SecretKey))
 	if err != nil {
-		e := &TokenGenerateError{1, "Error token generation"}
+		e := &ServiceErr{500, "Error token generation"}
 		return "", e
 	}
 	return
@@ -71,18 +61,19 @@ func (*AuthService) ValidateToken(signedToken string, j *JwtWrapper) (claims *Jw
 	)
 
 	if err != nil {
-		return
+		e := &ServiceErr{401, "Error token validation"}
+		return claims, e
 	}
 
 	claims, ok := token.Claims.(*JwtClaim)
 	if !ok {
-		err = errors.New("Couldn't parse claims")
-		return
+		e := &ServiceErr{403, "Couldn't parse claims"}
+		return claims, e
 	}
 
 	if claims.ExpiresAt < time.Now().Local().Unix() {
-		err = errors.New("JWT is expired")
-		return
+		e := &ServiceErr{401, "JWT is expired"}
+		return claims, e
 	}
 	return
 }
@@ -97,7 +88,8 @@ func (aS *AuthService) Validate(clientToken string) (*JwtClaim, error) {
 	if len(extractedToken) == 2 {
 		clientToken = strings.TrimSpace(extractedToken[1])
 	} else {
-		return &JwtClaim{}, errors.New(`"error":"Incorrect Format of Authorization Token`)
+		e := &ServiceErr{401, "Incorrect Format of Authorization Token"}
+		return &JwtClaim{}, e
 	}
 
 	jwtWrapper := JwtWrapper{
@@ -107,7 +99,8 @@ func (aS *AuthService) Validate(clientToken string) (*JwtClaim, error) {
 
 	claims, err := aS.ValidateToken(clientToken, &jwtWrapper)
 	if err != nil {
-		return &JwtClaim{}, errors.New(`"error":"Error token validation"`)
+		e := &ServiceErr{401, "Incorrect Format of Authorization Token"}
+		return &JwtClaim{}, e
 	}
 
 	return claims, err
