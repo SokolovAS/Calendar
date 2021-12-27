@@ -2,7 +2,10 @@ package http
 
 import (
 	"Calendar/entity"
+	"Calendar/internal/services/calendar"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -57,8 +60,15 @@ func (eventH *EventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
+		e := calendar.ServiceErr{}
+		if errors.As(err, &e) {
+			mess := fmt.Sprintf("%#v\n", e)
+			w.WriteHeader(e.Code)
+			_, err = w.Write([]byte(mess))
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err = w.Write([]byte(`{"error":"internal server error"}`))
+		return
 	}
 
 	result, err := json.Marshal(events)
@@ -77,6 +87,13 @@ func (eventH *EventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	res, err := eventH.eServ.GetOne(event.Id)
 	if err != nil {
+		e := calendar.ServiceErr{}
+		if errors.As(err, &e) {
+			mess := fmt.Sprintf("%#v\n", e)
+			w.WriteHeader(e.Code)
+			_, err = w.Write([]byte(mess))
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err = w.Write([]byte(`{"error":"internal server error"}`))
 	}
@@ -96,6 +113,13 @@ func (eventH *EventHandler) Add(w http.ResponseWriter, r *http.Request) {
 
 	e, err := eventH.eServ.Add(event)
 	if err != nil {
+		e := calendar.ServiceErr{}
+		if errors.As(err, &e) {
+			mess := fmt.Sprintf("%#v\n", e)
+			w.WriteHeader(e.Code)
+			_, err = w.Write([]byte(mess))
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err = w.Write([]byte(`{"error":"internal server error"}`))
 	}
@@ -116,6 +140,13 @@ func (eventH *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 	e, err := eventH.eServ.Update(event)
 
 	if err != nil {
+		e := calendar.ServiceErr{}
+		if errors.As(err, &e) {
+			mess := fmt.Sprintf("%#v\n", e)
+			w.WriteHeader(e.Code)
+			_, err = w.Write([]byte(mess))
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err = w.Write([]byte(`{"error":"internal server error"}`))
 	}
@@ -132,7 +163,18 @@ func (eventH *EventHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
-	eventH.eServ.Delete(event.Id)
+	err = eventH.eServ.Delete(event.Id)
+	if err != nil {
+		e := calendar.ServiceErr{}
+		if errors.As(err, &e) {
+			mess := fmt.Sprintf("%#v\n", e)
+			w.WriteHeader(e.Code)
+			_, err = w.Write([]byte(mess))
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err = w.Write([]byte(`{"error":"internal server error"}`))
+	}
 
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(`"result":"ok`))
