@@ -42,14 +42,14 @@ func (r *RepoPG) GetAllEvents() ([]entity.Event, error) {
 	return events, err
 }
 
-func (r *RepoPG) GetOne(id string) (entity.Event, error) {
-	row := r.conn.QueryRow("select * from event where id = $1", id)
-	e := entity.Event{}
-	err := row.Scan(&e.Id, &e.IdUser, &e.Title, &e.Description)
+func (r *RepoPG) GetOne(id string) (e entity.Event, err error) {
+	const selectQuery = "select * from event where id = $1"
+	row := r.conn.QueryRow(selectQuery, id)
+	err = row.Scan(&e.Id, &e.IdUser, &e.Title, &e.Description)
 	if err != nil {
 		panic(err)
 	}
-	return e, err
+	return
 }
 
 func (r *RepoPG) Add(e entity.Event) error {
@@ -86,7 +86,7 @@ func (e RepoError) Error() string {
 }
 
 func InitPG() (*sql.DB, error) {
-	connStr := "user=postgres password=somePassword dbname=postgres sslmode=disable"
+	connStr := "user=postgres password=mysecretpassword dbname=postgres sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return db, RepoError{500, "error PG connection"}

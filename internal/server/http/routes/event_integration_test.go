@@ -43,7 +43,7 @@ func TestEventGetAll(t *testing.T) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 }

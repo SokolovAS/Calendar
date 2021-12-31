@@ -16,13 +16,13 @@ type RepoPG interface {
 }
 
 type EventService struct {
-	conn RepoPG
+	repoPG RepoPG
 }
 
 func NewEventService(r RepoPG) *EventService {
 
 	return &EventService{
-		conn: r,
+		repoPG: r,
 	}
 }
 
@@ -36,7 +36,7 @@ func (e ServiceErr) Error() string {
 }
 
 func (eS *EventService) GetAll() ([]entity.Event, error) {
-	events, err := eS.conn.GetAllEvents()
+	events, err := eS.repoPG.GetAllEvents()
 	if err != nil {
 		repoErr := repository.RepoError{}
 		errors.As(err, &repoErr)
@@ -50,7 +50,7 @@ func (eS *EventService) GetAll() ([]entity.Event, error) {
 }
 
 func (eS *EventService) GetOne(id string) (entity.Event, error) {
-	e, err := eS.conn.GetOne(id)
+	e, err := eS.repoPG.GetOne(id)
 	if err != nil {
 		repoErr := repository.RepoError{}
 		errors.As(err, &repoErr)
@@ -64,7 +64,7 @@ func (eS *EventService) GetOne(id string) (entity.Event, error) {
 }
 
 func (eS *EventService) Add(event entity.Event) (entity.Event, error) {
-	err := eS.conn.Add(event)
+	err := eS.repoPG.Add(event)
 	if err != nil {
 		repoErr := repository.RepoError{}
 		errors.As(err, &repoErr)
@@ -78,13 +78,14 @@ func (eS *EventService) Add(event entity.Event) (entity.Event, error) {
 }
 
 func (eS *EventService) Update(event entity.Event) (entity.Event, error) {
-	err := eS.conn.Update(event)
+	err := eS.repoPG.Update(event)
 	if err != nil {
 		repoErr := repository.RepoError{}
-		errors.As(err, &repoErr)
-		err := ServiceErr{
-			Code:    500,
-			Message: fmt.Sprintf("%#v\n", repoErr),
+		if errors.As(err, &repoErr) {
+			err = ServiceErr{
+				Code:    repoErr.Code,
+				Message: fmt.Sprintf("%#v\n", repoErr),
+			}
 		}
 		return entity.Event{}, err
 	}
@@ -92,7 +93,7 @@ func (eS *EventService) Update(event entity.Event) (entity.Event, error) {
 }
 
 func (eS *EventService) Delete(id string) error {
-	err := eS.conn.Delete(id)
+	err := eS.repoPG.Delete(id)
 	if err != nil {
 		repoErr := repository.RepoError{}
 		errors.As(err, &repoErr)

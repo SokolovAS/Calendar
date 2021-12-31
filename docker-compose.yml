@@ -1,12 +1,18 @@
-# docker-compose.yml
-version: '3'
+version: "3"
+
 services:
-  database:
-    image: postgres:latest
-    container_name: postgres
+  db:
+    image: postgres:alpine
     ports:
       - "5432:5432"
-    env_file:
-      - database.env
     volumes:
+      - ./initdb.d:/docker-entrypoint-initdb.d/
       - database-data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: gotest
+      POSTGRES_USER: gouser
+      POSTGRES_PASSWORD: gopassword
+
+
+volumes:
+  database-data:
