@@ -39,11 +39,14 @@ func (eS *EventService) GetAll() ([]entity.Event, error) {
 	events, err := eS.repoPG.GetAllEvents()
 	if err != nil {
 		repoErr := repository.RepoError{}
-		errors.As(err, &repoErr)
-		err := ServiceErr{
-			Code:    500,
-			Message: fmt.Sprintf("%#v\n", repoErr),
+		if errors.As(err, &repoErr) {
+			err := ServiceErr{
+				Code:    500,
+				Message: fmt.Sprintf("%#v\n", repoErr),
+			}
+			return nil, err
 		}
+
 		return nil, err
 	}
 	return events, nil

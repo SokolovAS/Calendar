@@ -1,0 +1,30 @@
+syntax = "proto3";
+package chat;
+
+option go_package = "github.com/grpc-example/pb";
+
+message Event {
+  string Id = 1;
+  string IdUser = 2;
+  string  Title = 3;
+  string Description = 4;
+  string DateTime = 5;
+  string Duration = 6;
+  string Notes = 7;
+  repeated Event Events = 8;
+}
+
+message Empty {
+}
+
+message EventsResponse {
+  repeated Event Events = 1;
+}
+
+service EventService {
+  rpc GetAll (Event) returns (EventsResponse);
+  rpc GetOne (Event) returns (Event);
+  rpc Add (Event) returns (Event);
+  rpc Update (Event) returns (Event);
+  rpc Delete (Event) returns (Empty);
+}
