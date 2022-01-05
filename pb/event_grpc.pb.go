@@ -87,7 +87,7 @@ type EventServiceServer interface {
 	Add(context.Context, *Event) (*Event, error)
 	Update(context.Context, *Event) (*Event, error)
 	Delete(context.Context, *Event) (*Empty, error)
-	mustEmbedUnimplementedEventServiceServer()
+	MustEmbedUnimplementedEventServiceServer()
 }
 
 // UnimplementedEventServiceServer must be embedded to have forward compatible implementations.
@@ -109,7 +109,7 @@ func (UnimplementedEventServiceServer) Update(context.Context, *Event) (*Event, 
 func (UnimplementedEventServiceServer) Delete(context.Context, *Event) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedEventServiceServer) mustEmbedUnimplementedEventServiceServer() {}
+func (UnimplementedEventServiceServer) MustEmbedUnimplementedEventServiceServer() {}
 
 // UnsafeEventServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to EventServiceServer will
