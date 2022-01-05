@@ -3,6 +3,7 @@ package grps
 import (
 	"Calendar/entity"
 	"Calendar/internal/server/http"
+	"Calendar/internal/services/calendar"
 	_ "Calendar/internal/services/calendar"
 	"Calendar/pb"
 	"context"
@@ -13,6 +14,12 @@ import (
 
 type Server struct {
 	eventServ http.EventService
+}
+
+func NewGRPCServer(e *calendar.EventService) *Server {
+	return &Server{
+		eventServ: e,
+	}
 }
 
 func (s Server) GetAll(context.Context, *pb.Event) (*pb.EventsResponse, error) {
@@ -57,15 +64,15 @@ func (s Server) Update(ctx context.Context, event *pb.Event) (*pb.Event, error) 
 	return res.ToProto(), err
 }
 
-func (s Server) Delete(ctx context.Context, event *pb.Event) (*pb.Event, error) {
+func (s Server) Delete(ctx context.Context, event *pb.Event) (*pb.Empty, error) {
 	e := entity.FromProto(event)
 	err := s.eventServ.Delete(e.Id)
 	if err != nil {
-		return &pb.Event{}, err
+		return &pb.Empty{}, err
 	}
-	return &pb.Event{}, err
+	return &pb.Empty{}, err
 }
 
-func (s Server) mustEmbedUnimplementedEventServiceServer() {
+func (s Server) MustEmbedUnimplementedEventServiceServer() {
 	panic("implement me")
 }
