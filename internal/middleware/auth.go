@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"Calendar/internal/services/calendar"
+	"context"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -23,6 +25,12 @@ func NewMiddleware(a AuthService) *Middleware {
 // Authz validates token and authorizes users
 func (m *Middleware) Authz(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+		id := uuid.New()
+		ctx = context.WithValue(ctx, "requestId", id.String())
+		r = r.WithContext(ctx)
+
 		clientToken := r.Header.Get("Authorization")
 		c, err := m.authS.Validate(clientToken)
 		if err != nil {

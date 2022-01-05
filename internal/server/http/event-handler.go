@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -56,10 +57,17 @@ func assertResponseError(err error) {
 }
 
 func (eventH *EventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	events, err := eventH.eServ.GetAll()
+	ctx := r.Context()
+	rId := ctx.Value("requestId")
 
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
+	events, err := eventH.eServ.GetAll()
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
+		sugar.Infof("Failed to get events: %s", rId)
 		e := calendar.ServiceErr{}
 		if errors.As(err, &e) {
 			mess := fmt.Sprintf("%#v\n", e)
@@ -80,6 +88,12 @@ func (eventH *EventHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (eventH *EventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	rId := ctx.Value("requestId")
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var event entity.Event
@@ -87,6 +101,7 @@ func (eventH *EventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	res, err := eventH.eServ.GetOne(event.Id)
 	if err != nil {
+		sugar.Infof("Failed to get event: %s", rId)
 		e := calendar.ServiceErr{}
 		if errors.As(err, &e) {
 			mess := fmt.Sprintf("%#v\n", e)
@@ -106,6 +121,12 @@ func (eventH *EventHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (eventH *EventHandler) Add(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	rId := ctx.Value("requestId")
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var event entity.Event
@@ -113,6 +134,7 @@ func (eventH *EventHandler) Add(w http.ResponseWriter, r *http.Request) {
 
 	e, err := eventH.eServ.Add(event)
 	if err != nil {
+		sugar.Infof("Failed to get event: %s", rId)
 		e := calendar.ServiceErr{}
 		if errors.As(err, &e) {
 			mess := fmt.Sprintf("%#v\n", e)
@@ -132,14 +154,20 @@ func (eventH *EventHandler) Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func (eventH *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	rId := ctx.Value("requestId")
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
 	e, err := eventH.eServ.Update(event)
-
 	if err != nil {
+		sugar.Infof("Failed updating an event: %s", rId)
 		e := calendar.ServiceErr{}
 		if errors.As(err, &e) {
 			mess := fmt.Sprintf("%#v\n", e)
@@ -159,12 +187,19 @@ func (eventH *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (eventH *EventHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	rId := ctx.Value("requestId")
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
 	w.Header().Set("Content-Type", "application/json")
 	var event entity.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 
 	err = eventH.eServ.Delete(event.Id)
 	if err != nil {
+		sugar.Infof("Failed updating an event: %s", rId)
 		e := calendar.ServiceErr{}
 		if errors.As(err, &e) {
 			mess := fmt.Sprintf("%#v\n", e)

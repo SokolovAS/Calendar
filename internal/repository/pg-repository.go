@@ -86,7 +86,7 @@ func (e RepoError) Error() string {
 }
 
 func InitPG() (*sql.DB, error) {
-	connStr := "user=postgres password=mysecretpassword dbname=postgres sslmode=disable"
+	connStr := "user=gouser password=gopassword dbname=gotest sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return db, RepoError{500, "error PG connection"}
